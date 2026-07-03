@@ -43,9 +43,9 @@
 ## M1 — 트래킹 스파이크 + 뼈대 (2~3주)
 
 ### 1주차: 기술 스파이크 ⚠️ 프로젝트 성립 조건 — 다른 무엇보다 먼저
-- [ ] 로그인·화면 없이 빈 앱 + Foreground Service(type: location)만으로 위치 기록 구현
-  - [ ] `geolocator` + `flutter_foreground_task` 조합, `ACCESS_BACKGROUND_LOCATION` **선언 없이** 구성 (Play 백그라운드 위치 심사 우회)
-- [ ] 갤럭시 실기기에서 **화면 끈 채 1시간 이상** 백그라운드 기록 검증
+- [x] 로그인·화면 없이 빈 앱 + Foreground Service(type: location)만으로 위치 기록 구현 (2026-07-04, `lib/spike/` + `lib/core/tracking/`)
+  - [x] `geolocator` + `flutter_foreground_task` 조합, `ACCESS_BACKGROUND_LOCATION` **선언 없이** 구성 (Play 백그라운드 위치 심사 우회)
+- [ ] 갤럭시 실기기에서 **화면 끈 채 1시간 이상** 백그라운드 기록 검증 — 절차: `app/docs/m1_spike_검증절차.md`
 - [ ] 실주행 1회 검증 (실제 달리기, 주머니에 폰)
 - [ ] 절전 모드·앱 자동 종료 상황에서 유실 정도 확인
 - [ ] **판정**: 유실이 심하면 이 시점에 유료 패키지(`flutter_background_geolocation`) 전환 결정 (fail fast)
