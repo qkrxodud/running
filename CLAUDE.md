@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## 저장소 구조
 
 - `app/` — Flutter 클라이언트 (Android 우선). 상세 가이드는 `app/CLAUDE.md`
-- `backend/` — Spring Boot 3.x + Java 17 서버 (헥사고날)
+- `backend/` — Spring Boot 3.5+ + Java 25 서버 (헥사고날)
 - `app/docs/러닝크루_앱_계획서.md` — 제품·도메인·아키텍처의 단일 진실 공급원
 - `docs/contracts/` — 앱↔서버 API 계약 (경계면의 기준)
 - `_workspace/` — 하네스 중간 산출물 (감사 추적용 보존)

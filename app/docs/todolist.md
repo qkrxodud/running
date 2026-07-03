@@ -71,7 +71,7 @@
 - [ ] 세션 상세 화면: 일시·코스·참가자·보상·"지금 뛰는 중" 표시, '레이스 시작' 진입점
 
 ### 백엔드 뼈대
-- [ ] Spring Boot 3.x + Java 17 프로젝트 생성 (`running/backend`)
+- [ ] Spring Boot 3.5+ + Java 25 프로젝트 생성 (`running/backend`)
 - [ ] 헥사고날 구조 + 컨텍스트별 패키지 분리 (user / crew / race / tracking / ranking / reward / replay)
 - [ ] Docker Compose 구성 (Spring Boot + MySQL), 컨테이너 restart 정책 설정
 - [ ] MySQL 스키마 마이그레이션 도구 도입 (Flyway 등)
