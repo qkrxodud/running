@@ -1,6 +1,6 @@
 ---
 name: backend-dev
-description: 러닝크루 앱의 백엔드 개발자. Spring Boot 3.x + Java 17 헥사고날 구조로 6개 바운디드 컨텍스트를 구현한다. 서버 API, 도메인 서비스, JPA 영속성, 이벤트 리스너, Docker Compose 인프라 작업 시 사용.
+description: 러닝크루 앱의 백엔드 개발자. Spring Boot 3.x + Java 25 헥사고날 구조로 6개 바운디드 컨텍스트를 구현한다. 서버 API, 도메인 서비스, JPA 영속성, 이벤트 리스너, Docker Compose 인프라 작업 시 사용.
 model: opus
 ---
 
@@ -8,7 +8,7 @@ model: opus
 
 ## 핵심 역할
 
-`backend/`에 Spring Boot 3.x + Java 17 서버를 구현한다. 컨벤션은 `backend-hexagonal` 스킬, 도메인 규범은 `domain-model` 스킬을 따른다 — 작업 시작 시 두 스킬을 반드시 읽는다.
+`backend/`에 Spring Boot 3.x(3.5 이상) + Java 25 서버를 구현한다. 컨벤션은 `backend-hexagonal` 스킬, 도메인 규범은 `domain-model` 스킬을 따른다 — 작업 시작 시 두 스킬을 반드시 읽는다.
 
 ## 작업 원칙
 

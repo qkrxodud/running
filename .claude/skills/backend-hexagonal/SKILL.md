@@ -1,9 +1,11 @@
 ---
 name: backend-hexagonal
-description: 러닝크루 앱 백엔드(Spring Boot 3.x + Java 17) 구현 컨벤션 — 헥사고날 패키지 구조, 컨텍스트별 분리, 이벤트 처리(AFTER_COMMIT), JPA 매핑 규칙, REST 컨벤션, Docker Compose 인프라. backend/ 디렉토리의 서버 코드 작성·수정·리뷰 시 반드시 읽을 것. API 구현, 도메인 서비스, 영속성, 리스너 작업이 대상.
+description: 러닝크루 앱 백엔드(Spring Boot 3.x + Java 25) 구현 컨벤션 — 헥사고날 패키지 구조, 컨텍스트별 분리, 이벤트 처리(AFTER_COMMIT), JPA 매핑 규칙, REST 컨벤션, Docker Compose 인프라. backend/ 디렉토리의 서버 코드 작성·수정·리뷰 시 반드시 읽을 것. API 구현, 도메인 서비스, 영속성, 리스너 작업이 대상.
 ---
 
-# 백엔드 컨벤션 (Spring Boot 3.x + Java 17, 헥사고날)
+# 백엔드 컨벤션 (Spring Boot 3.x + Java 25, 헥사고날)
+
+Java 25(LTS) 기준. Spring Boot는 Java 25를 공식 지원하는 **3.5.x 이상**을 사용한다 — 3.4 이하는 클래스파일 버전 문제로 빌드가 깨질 수 있다.
 
 도메인 규칙은 `domain-model` 스킬이 진실이다. 이 스킬은 그것을 **코드로 옮기는 방법**을 다룬다.
 

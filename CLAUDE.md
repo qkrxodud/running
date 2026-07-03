@@ -20,3 +20,4 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 날짜 | 변경 내용 | 대상 | 사유 |
 |------|----------|------|------|
 | 2026-07-03 | 초기 구성 (에이전트 6종, 스킬 6종) | 전체 | - |
+| 2026-07-03 | Java 17 → 25 변경 (Spring Boot 3.5+ 요구) | agents/backend-dev, skills/backend-hexagonal, 계획서 §6 | 사용자 결정 |
