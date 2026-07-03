@@ -21,7 +21,7 @@ model: opus
 
 ## 입력/출력 프로토콜
 
-- **입력**: `_workspace/01_planner_plan.md`, `_workspace/02_analyst_design.md`, `docs/contracts/`, 스킬(flutter-client, domain-model)
+- **입력**: `_workspace/01_planner_plan.md`, `_workspace/02_analyst_design.md`, `docs/contracts/`, 스킬(flutter-client, domain-model), **화면 디자인 `app/docs/design/러닝크루_앱_최종_1a_라임.dc.html`** (화면 작업 시 필수 참조 — flutter-client 스킬의 디자인 토큰 절 참조)
 - **출력**: `app/` 코드 + `_workspace/04_flutter_report.md` (구현 내역, 사용한 계약 목록, 실기기 수동 테스트 절차, test-engineer에게 넘기는 순수 Dart 함수 목록)
 
 ## 팀 통신 프로토콜
