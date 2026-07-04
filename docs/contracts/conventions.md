@@ -1,7 +1,11 @@
 # API 공통 규약 (conventions)
 
-> **v0.1 · 2026-07-04 · 계약 우선 초안(contract-first)** — 서버 구현이 아직 없어도 이 문서가 앱↔서버 공유 스키마의 진실이다. 변경은 domain-analyst 경유, flutter-dev·backend-dev 양쪽 통지.
+> **v0.1.1 · 2026-07-04** — 서버 구현이 아직 없어도 이 문서가 앱↔서버 공유 스키마의 진실이다. 변경은 domain-analyst 경유, flutter-dev·backend-dev 양쪽 통지.
 > 관리자: domain-analyst. 규범: `domain-model` 스킬, 계획서 §5~§7.
+>
+> **변경 이력**
+> - v0.1.1 (2026-07-04, domain-analyst): 배치 B1 — §4 code 집합에 AUTH_* 3종 추가, §5 인증 미규정 해소(상세는 auth-api.md가 진실), §6 페이지네이션 offset 방식 확정.
+> - v0.1 (2026-07-04, domain-analyst): 계약 우선 초안.
 
 ## 1. Base Path / 버전
 
@@ -34,22 +38,22 @@
 - `message`: 사람용(한국어). 표시 문구는 클라가 code로 자체 대응 가능(로케일).
 - HTTP 상태 매핑:
   - `400 BAD_REQUEST` — 요청 형식 오류·도메인 규칙 위반(값 범위 등).
-  - `401 UNAUTHORIZED` — 토큰 없음/만료 → **클라이언트는 재로그인 플로우 진입**.
+  - `401 UNAUTHORIZED` — 인증 실패. code별 클라 행동(만료→갱신 vs 재로그인)은 auth-api.md §3 규약.
   - `403 FORBIDDEN` — 권한 부족(크루장 전용 작업을 멤버가 호출 등).
   - `404 NOT_FOUND` — 자원 없음.
   - `409 CONFLICT` — 상태 충돌(이미 참가함, 만료된 초대코드, 코스 불변 위반 등).
-- 공통 `code` 초안(배치 A 범위): `VALIDATION_ERROR`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `INVITE_CODE_INVALID`, `INVITE_CODE_EXPIRED`, `INVITE_CODE_EXHAUSTED`, `ALREADY_JOINED`, `CREW_CLOSED`, `COURSE_IMMUTABLE`, `SESSION_STATE_INVALID`. (배치 B에서 확장)
+- 공통 `code` 집합: `VALIDATION_ERROR`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `INVITE_CODE_INVALID`, `INVITE_CODE_EXPIRED`, `INVITE_CODE_EXHAUSTED`, `ALREADY_JOINED`, `CREW_CLOSED`, `COURSE_IMMUTABLE`, `SESSION_STATE_INVALID` + **v0.1.1 추가(401 세분)**: `AUTH_KAKAO_TOKEN_INVALID`, `AUTH_TOKEN_EXPIRED`, `AUTH_REFRESH_INVALID` (의미·클라 플로우는 auth-api.md §3). (이후 배치에서 확장)
 
 ## 5. 인증
 
 - 방식: **자체 발급 토큰**(카카오 로그인 → 서버가 자체 토큰 발급). 카카오 회원번호는 서버 내부 봉인, 계약·응답에 노출 금지.
 - 헤더: `Authorization: Bearer {token}`.
-- 토큰 형식·만료·갱신 엔드포인트 상세는 **배치 B에서 확정**(현재 미규정 — 제안: JWT access + refresh).
-- `GET /app-version`만 **인증 불요**(강제 업데이트 판단이 로그인보다 앞섬). 그 외 배치 A 조회/명령은 전부 인증 필요(단, 계약 초안이므로 개별 문서에 `auth: required` 명시).
+- 토큰 형식·만료·갱신·401 플로우 상세는 **`auth-api.md`가 진실**(v0.1.1에서 미규정 해소 — JWT HS256, access 30분/refresh 30일, 쌍 회전).
+- 인증 불요 경로: `GET /app-version`, `/api/v1/auth/**`, `/actuator/health`. 그 외 전부 인증 필요(개별 문서에 `auth: required` 명시).
 
 ## 6. 페이지네이션
 
-- **미규정 — 제안: offset 기반 단순 방식**(크루/세션 목록 규모가 작음. 히스토리 대량화 시 cursor로 승격).
+- **offset 기반 단순 방식 확정**(v0.1.1 — 크루/세션 목록 규모가 작음. 히스토리 대량화 시 cursor로 승격 검토).
 - 요청 쿼리: `?page={0-base}&size={기본 20, 최대 100}`.
 - 응답 공통 래퍼:
 
