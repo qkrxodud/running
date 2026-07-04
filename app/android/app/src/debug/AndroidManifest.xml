@@ -4,4 +4,7 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- 개발용 로컬 서버(http://10.0.2.2:8080 등)와의 평문 HTTP 허용.
+         debug 빌드에만 병합된다 — 릴리즈는 https(Cloudflare) 전제라 cleartext 불허 유지. -->
+    <application android:usesCleartextTraffic="true" />
 </manifest>

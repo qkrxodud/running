@@ -2,6 +2,7 @@
     <!-- M1 트래킹 스파이크: Foreground Service(type: location) 방식.
          ACCESS_BACKGROUND_LOCATION은 의도적으로 선언하지 않는다 —
          화면 꺼짐 트래킹은 포그라운드 서비스로 충분하며 Play 백그라운드 위치 심사를 우회한다. -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
