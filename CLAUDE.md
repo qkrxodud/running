@@ -25,3 +25,4 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 2026-07-03 | Java 17 → 25 변경 (Spring Boot 3.5+ 요구) | agents/backend-dev, skills/backend-hexagonal, 계획서 §6 | 사용자 결정 |
 | 2026-07-03 | 화면 디자인 기준 등록 ("1a 라임" dc.html + 디자인 토큰) | skills/flutter-client, agents/flutter-dev, app/docs/design/ | 사용자 디자인 확정 |
 | 2026-07-03 | 회귀 방지 체계 추가 (레지스트리 + red→green 박제 + Phase 5 게이트) | docs/regressions.md, skills/running-dev·golden-testing·qa-integration, agents/test-engineer | 재발 방지 장치 부재 피드백 |
+| 2026-07-04 | 배치 A 완료 — 백엔드 골조·클라 아키텍처·계약 v0.1·R-002/R-003 종결. 다음: 배치 B (`_workspace/01_planner_plan.md` 참조, O-1 알림 방식 결정 대기, 카카오 키 대기) | 커밋 779698c | 팀 실행 1회차 |
