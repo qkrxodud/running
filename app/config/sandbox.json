@@ -1,0 +1,7 @@
+{
+  "APP_ENV": "sandbox",
+  "API_BASE_URL": "http://172.30.1.10:8081",
+  "DEV_LOGIN": "true",
+  "KAKAO_APP_KEY": "",
+  "NAVER_MAP_CLIENT_ID": ""
+}

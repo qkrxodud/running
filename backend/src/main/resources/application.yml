@@ -66,7 +66,7 @@ jwt:
   refresh-ttl-seconds: 2592000
 
 ---
-# local 프로필 — 개발 편의 기본값. 스텁 카카오 검증기(@Profile local/dev)와 세트.
+# local 프로필(dev 환경) — 로컬 개발 편의 기본값. 스텁 카카오 검증기·DevCourseSeeder(@Profile local/dev/sandbox)와 세트.
 # prod/프로필 미지정에서는 스텁 빈이 없어 부팅 실패(fail-fast) — 스텁의 운영 유출을 구조로 차단.
 spring:
   config:
@@ -74,3 +74,24 @@ spring:
       on-profile: local
 jwt:
   secret: ${JWT_SECRET:local-dev-only-jwt-secret-do-not-use-in-prod-0123456789abcdef}
+
+---
+# sandbox 프로필 — 크루원 실기기 테스트용(카카오 앱 키 확보 전). 스텁 카카오 로그인 ON + DevCourseSeeder ON.
+# JWT는 env JWT_SECRET 필수(기본값 없음 — 베이스 ${JWT_SECRET:}만 상속하므로 미설정 시 JwtTokenProvider fail-fast).
+# docker-compose.sandbox.yml(앱 8081·MySQL 3307·runningcrew_sandbox)로 prod 스택과 동시 기동 가능.
+spring:
+  config:
+    activate:
+      on-profile: sandbox
+# jwt.secret 미정의 — env JWT_SECRET을 반드시 주입해야 부팅됨(default 없음).
+
+---
+# prod 프로필 — 운영. 스텁·시더 미주입(빈 부재 fail-fast로 유출 차단), JWT_SECRET env 필수(기본값 없음).
+# 실 카카오 어댑터(@Profile prod) 배선 전까지 KakaoTokenVerifier 빈 부재로 의도적 부팅 실패.
+spring:
+  config:
+    activate:
+      on-profile: prod
+logging:
+  level:
+    com.runningcrew: INFO   # 운영은 DEBUG 비활성(민감정보·소음 축소)

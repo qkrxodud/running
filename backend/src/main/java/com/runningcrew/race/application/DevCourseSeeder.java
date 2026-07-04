@@ -18,7 +18,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * dev 시드 코스(설계 §1.4). <b>{@code @Profile({"local","dev"})} 전용</b> — prod 미유출(CO-B7).
+ * dev 시드 코스(설계 §1.4). <b>{@code @Profile({"local","dev","sandbox"})} 전용</b> — prod 미유출(CO-B7).
  * Flyway 마이그레이션은 prod에도 실행되므로 지양하고, 프로필 분기가 되는 시더 빈으로 넣는다.
  *
  * <p>부팅 시 ACTIVE 크루가 있으면 그 크루장 명의로 더미 코스 2개를 upsert(이름 기준 멱등 — 재기동 중복 없음).
@@ -26,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 폴리라인은 서버 인코딩 경로(1e5), distance_m은 서버 계산 경로를 그대로 통과한다.
  */
 @Component
-@Profile({"local", "dev"})
+@Profile({"local", "dev", "sandbox"})
 public class DevCourseSeeder implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(DevCourseSeeder.class);

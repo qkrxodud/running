@@ -1,15 +1,10 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../app/app_config.dart';
 import '../../app/app_theme.dart';
 import '../../app/providers.dart';
 import '../../core/model/api_error.dart';
-
-/// dev 전용 로그인 여부 — 릴리즈 빌드 기본 미포함(B1-C2 AC ②).
-/// 통합테스트 등에서 --dart-define=DEV_LOGIN=true 로 강제 가능.
-const bool devLoginEnabled =
-    bool.fromEnvironment('DEV_LOGIN', defaultValue: kDebugMode);
 
 /// 로그인 화면.
 ///
@@ -95,7 +90,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 child: const Text('카카오 로그인 (준비 중 — 키 발급 대기)'),
               ),
-              if (devLoginEnabled) ...[
+              // dev·sandbox 에서만 노출(prod 차단). 게이트 단일 창구 = AppConfig.
+              if (AppConfig.devLoginEnabled) ...[
                 const SizedBox(height: 24),
                 const Text(
                   'DEV 로그인 (스텁 — prod 미포함)',

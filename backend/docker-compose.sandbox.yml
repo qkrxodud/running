@@ -1,0 +1,60 @@
+# 러닝크루 sandbox 풀스택 — 크루원 실기기 테스트용(카카오 앱 키 확보 전). 앱 8081 / MySQL 3307.
+# 프로필 sandbox: 스텁 카카오 로그인 ON + DevCourseSeeder ON. JWT_SECRET env 필수(미설정 시 기동 거부).
+# 포트·볼륨·DB명·컨테이너명·프로젝트명 전부 prod와 분리 → 같은 호스트에서 prod 스택과 동시 기동 가능(충돌 0).
+# 실행: JWT_SECRET=... docker compose -f docker-compose.sandbox.yml up -d --build
+name: runningcrew-sandbox
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: runningcrew-mysql-sandbox
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: runningcrew_sandbox
+      MYSQL_USER: runningcrew
+      MYSQL_PASSWORD: runningcrew
+      MYSQL_ROOT_PASSWORD: root
+      TZ: UTC
+    command:
+      - --default-time-zone=+00:00       # MySQL 서버 타임존 UTC 고정
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+    ports:
+      - "3307:3306"                      # 호스트 3307 → prod의 3306과 분리
+    volumes:
+      - mysql-data-sandbox:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: runningcrew-app-sandbox
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      # 컨테이너 내부 네트워크에서는 서비스명 mysql:3306(호스트 매핑 3307과 무관), DB는 runningcrew_sandbox.
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/runningcrew_sandbox?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: runningcrew
+      SPRING_DATASOURCE_PASSWORD: runningcrew
+      SPRING_PROFILES_ACTIVE: sandbox
+      # sandbox 시크릿 — 호스트 env로 주입(기본값 없음, 미설정 시 compose가 기동 거부).
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set for sandbox}
+      TZ: UTC
+    ports:
+      - "8081:8080"                      # 호스트 8081 → prod의 8080과 분리
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+volumes:
+  mysql-data-sandbox:

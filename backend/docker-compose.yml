@@ -1,5 +1,9 @@
-# 러닝크루 로컬/홈서버 인프라 — Spring Boot + MySQL 8.
+# 러닝크루 운영(prod) 풀스택 — Spring Boot + MySQL 8. 앱 8080 / MySQL 3306.
 # restart: unless-stopped (정전 복구 무인 재기동 전제, backend-hexagonal 스킬).
+# 프로필 prod: 스텁 카카오·시더 없음. JWT_SECRET env 필수(미설정 시 기동 거부).
+# 실행: JWT_SECRET=... docker compose up -d --build
+# 주의: 실 카카오 어댑터(@Profile prod) 배선 전까지 KakaoTokenVerifier 빈 부재로 부팅 실패(의도된 fail-fast).
+name: runningcrew
 services:
   mysql:
     image: mysql:8.0
@@ -39,9 +43,9 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/runningcrew?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&characterEncoding=UTF-8
       SPRING_DATASOURCE_USERNAME: runningcrew
       SPRING_DATASOURCE_PASSWORD: runningcrew
-      # M0 카카오 키 확보 전까지 local 프로필(스텁 카카오 검증기). prod 전환 시 실 어댑터 배선 + JWT_SECRET 필수 주입.
-      SPRING_PROFILES_ACTIVE: local
-      JWT_SECRET: ${JWT_SECRET:-local-dev-only-jwt-secret-do-not-use-in-prod-0123456789abcdef}
+      SPRING_PROFILES_ACTIVE: prod
+      # 운영 시크릿 — 반드시 호스트 env로 주입(기본값 없음, 미설정 시 compose가 기동 거부).
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set for prod}
       TZ: UTC
     ports:
       - "8080:8080"
