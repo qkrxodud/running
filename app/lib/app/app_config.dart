@@ -21,10 +21,12 @@ class AppConfig {
   static const String environment =
       String.fromEnvironment('APP_ENV', defaultValue: 'dev');
 
-  /// 서버 base URL. dev 기본 = Android 에뮬레이터에서 호스트 localhost.
+  /// 서버 base URL. dev 기본 = localhost:8080 — 실기기·에뮬레이터 공통으로
+  /// `adb reverse tcp:8080 tcp:8080` 터널을 전제로 한다 (10.0.2.2는 에뮬레이터
+  /// 전용이라 실기기에서 NETWORK_ERROR — 이 전환의 이유).
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://10.0.2.2:8080',
+    defaultValue: 'http://localhost:8080',
   );
 
   /// 카카오 앱 키 — **대기**(M0). 빈 값이면 실 카카오 로그인 미배선(스텁 유지).
