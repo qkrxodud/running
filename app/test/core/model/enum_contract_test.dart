@@ -2,6 +2,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:running/core/model/crew_dtos.dart';
 import 'package:running/core/model/enum_codec.dart';
 import 'package:running/core/model/race_dtos.dart';
+import 'package:running/core/model/track_dtos.dart';
 import 'package:running/core/model/user_dtos.dart';
 
 /// 계약 enum 값 집합 대조 (설계 12 §6.3 — R-001 재발 방지 의무 테스트).
@@ -46,6 +47,20 @@ void main() {
         'DNS',
         'WITHDRAWN',
       });
+    });
+
+    // Tracking 컨텍스트 — track-api.md v0.1.1.
+    test('track.processing_status = {PROCESSED} (track-api §1)', () {
+      expect(ProcessingStatus.wireValues.keys.toSet(), {'PROCESSED'});
+    });
+
+    test('track.finish_status = {FINISHED, DNF} (track-api §1)', () {
+      expect(FinishStatus.wireValues.keys.toSet(), {'FINISHED', 'DNF'});
+    });
+
+    test('result.entry.status = {FINISHED, DNF, DNS} (track-api §3)', () {
+      expect(ResultEntryStatus.wireValues.keys.toSet(),
+          {'FINISHED', 'DNF', 'DNS'});
     });
   });
 

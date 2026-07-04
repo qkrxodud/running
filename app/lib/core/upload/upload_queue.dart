@@ -118,6 +118,19 @@ class UploadQueue {
     );
   }
 
+  /// 비재시도 종단 실패: 재시도해도 결과가 바뀌지 않는 오류(4xx 클라 오류 —
+  /// 비멤버 403·미등록 409·payload 400 등)를 백오프 재시도 없이 즉시 [failed]
+  /// 로 종단한다. maxAttempts 소진과 동일하게 **보존만**(제거하지 않음 — C-5/R-002).
+  /// 로컬 원본 삭제는 여전히 succeeded 확정 이후에만 가능하다(여기선 삭제 없음).
+  void markTerminalFailure(String id) {
+    final i = _indexOf(id);
+    if (i < 0) return;
+    _tasks[i] = _tasks[i].copyWith(
+      status: UploadStatus.failed,
+      clearNextAttempt: true,
+    );
+  }
+
   /// 성공 확정: succeeded 표시. 이 시점 이후에만 소비자가 로컬 원본 삭제를
   /// 결정할 수 있다(그 전에 삭제하는 코드를 만들지 않는다 — C-5).
   void markSucceeded(String id) {

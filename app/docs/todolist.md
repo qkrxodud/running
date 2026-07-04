@@ -132,9 +132,9 @@
 - [ ] TrackPoint 수집: (timestamp, lat, lng, altitude, speed, accuracy)
 - [ ] **적응형 샘플링**: 주행 중 3~5초 / 정지(속도 0) 지속 시 10초 완화 / 이동 재개 시 복귀
 - [ ] 타임스탬프는 기기 시계가 아닌 **GPS 시각 우선** 사용
-- [ ] 로컬 우선 저장 (레이스 중 서버 없이도 완결 — 완주 후 사후 업로드)
-- [ ] 클라이언트 로컬 상태머신: READY → RUNNING → FINISHED_LOCAL → UPLOADED
-- [ ] 업로드: 인코딩 폴리라인 + 병렬 배열(timestamp/speed), 실패 시 지수 백오프 재시도
+- [ ] 로컬 우선 저장 (레이스 중 서버 없이도 완결 — 완주 후 사후 업로드) — 코어·큐는 완료, 트래커 연결이 M2-B
+- [x] 클라이언트 로컬 상태머신: READY → RUNNING → FINISHED_LOCAL → UPLOADED (순수 Dart, 서버 상태와 격리 — QA 6차 확인) (2026-07-04 M2-B0)
+- [x] 업로드: 폴리라인(1e5)+병렬 배열, 지수 백오프, 멱등 키 재사용, 403/409 코드 분기 — dio 배선 완료, 트래커→enqueue 연결은 M2-B (2026-07-04 M2-B0)
 - [ ] **업로드 실패율 로깅 계측** (Crashlytics/구조화 로그에 심기 — M4 "확인 루틴"이 볼 데이터 소스, 계측 없으면 관측 불가)
 - [ ] `client_meta`(os, os_version, device_model) 부가 수집 — 플랫폼 종속 필드는 스키마에 두지 않음
 
