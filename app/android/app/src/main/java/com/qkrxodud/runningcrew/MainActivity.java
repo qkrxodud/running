@@ -1,4 +1,4 @@
-package com.example.running;
+package com.qkrxodud.runningcrew;
 
 import io.flutter.embedding.android.FlutterActivity;
 

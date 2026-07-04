@@ -24,4 +24,4 @@ Lints come from `package:flutter_lints/flutter.yaml` via `analysis_options.yaml`
 
 ## Platform layout
 
-`android/` and `ios/` are standard Flutter platform host projects. The Android application id / package is `com.example.running` (`android/app/src/main/java/com/example/running/MainActivity.java`) and should be changed before any real release.
+`android/` and `ios/` are standard Flutter platform host projects. The Android application id / package is `com.qkrxodud.runningcrew` (confirmed 2026-07-04, registered with Kakao).

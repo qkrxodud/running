@@ -10,7 +10,7 @@
 
 ### 스토어 / 계정
 - [ ] Google Play Console 개발자 계정 생성
-- [ ] 패키지명(applicationId) 확정 — 현재 `com.example.running`이므로 **반드시 변경** (`android/app/build.gradle` + `MainActivity` 패키지 경로)
+- [x] 패키지명(applicationId) 확정: `com.qkrxodud.runningcrew` (2026-07-04, 카카오 콘솔 등록값과 일치)
 - [ ] 릴리즈 서명 키(keystore) 생성 + 안전한 백업 (분실 시 앱 업데이트 불가)
 - [ ] Android 개발자 인증 완료 — 패키지명 + 서명 키 SHA-256 등록 (**2026년 4월부터 필수**)
 

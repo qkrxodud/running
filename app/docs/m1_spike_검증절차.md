@@ -32,8 +32,8 @@
 
 ```bash
 # 기기에서 트랙 파일 꺼내기 (analyze용 + 골든 테스트 픽스처 축적)
-adb shell run-as com.example.running ls files/
-adb shell run-as com.example.running cat "files/spike_track_<파일명>.jsonl" > fixtures/tracks/<날짜>_<기기>_<상황>.jsonl
+adb shell run-as com.qkrxodud.runningcrew ls files/
+adb shell run-as com.qkrxodud.runningcrew cat "files/spike_track_<파일명>.jsonl" > fixtures/tracks/<날짜>_<기기>_<상황>.jsonl
 ```
 
 포인트 간격 분석 (터미널):
