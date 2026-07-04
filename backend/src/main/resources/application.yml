@@ -12,15 +12,16 @@ spring:
   jpa:
     open-in-view: false
     hibernate:
-      # 스키마 진실은 Flyway(V1__init.sql). Hibernate는 스키마를 생성/변경하지 않는다.
-      # validate가 아니라 none인 이유: Instant↔TIMESTAMP(6) 매핑의 방언별 타입명 검증이
-      # 라이브 MySQL 대조 없이 취약해 무인 재기동(restart:unless-stopped)을 깨뜨릴 수 있어,
-      # 배치 B에서 실제 MySQL로 검증 후 validate로 승격한다.
-      ddl-auto: none
+      # 스키마 진실은 Flyway. Hibernate는 검증만 — 배치 B1에서 none → validate 승격
+      # (Testcontainers 라이브 검증 JpaSchemaValidationLiveTest가 근거. 배치 A 보류-1 해소).
+      ddl-auto: validate
     properties:
       hibernate:
         jdbc:
           time_zone: UTC   # MySQL 세션 타임존 UTC 고정(저장·비교·판정 전부 UTC)
+        # R-003 파생 선제 해소: 모든 식별자 전역 인용 — rank 등 MySQL 예약어 컬럼이
+        # M2에 엔티티로 등장해도 JPA가 안전하게 인용한다(설계 12 §5).
+        globally_quoted_identifiers: true
         format_sql: false
 
   flyway:
@@ -56,3 +57,20 @@ logging:
 
 server:
   port: 8080
+
+# JWT (계약 auth-api.md 확정 스펙: HS256, access 30분 / refresh 30일)
+# 시크릿은 env JWT_SECRET(≥256bit) — 기본 프로필엔 기본값 없음(미설정 시 부팅 실패 fail-fast).
+jwt:
+  secret: ${JWT_SECRET:}
+  access-ttl-seconds: 1800
+  refresh-ttl-seconds: 2592000
+
+---
+# local 프로필 — 개발 편의 기본값. 스텁 카카오 검증기(@Profile local/dev)와 세트.
+# prod/프로필 미지정에서는 스텁 빈이 없어 부팅 실패(fail-fast) — 스텁의 운영 유출을 구조로 차단.
+spring:
+  config:
+    activate:
+      on-profile: local
+jwt:
+  secret: ${JWT_SECRET:local-dev-only-jwt-secret-do-not-use-in-prod-0123456789abcdef}

@@ -26,3 +26,4 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 | 2026-07-03 | 화면 디자인 기준 등록 ("1a 라임" dc.html + 디자인 토큰) | skills/flutter-client, agents/flutter-dev, app/docs/design/ | 사용자 디자인 확정 |
 | 2026-07-03 | 회귀 방지 체계 추가 (레지스트리 + red→green 박제 + Phase 5 게이트) | docs/regressions.md, skills/running-dev·golden-testing·qa-integration, agents/test-engineer | 재발 방지 장치 부재 피드백 |
 | 2026-07-04 | 배치 A 완료 — 백엔드 골조·클라 아키텍처·계약 v0.1·R-002/R-003 종결. 다음: 배치 B (`_workspace/01_planner_plan.md` 참조, O-1 알림 방식 결정 대기, 카카오 키 대기) | 커밋 779698c | 팀 실행 1회차 |
+| 2026-07-04 | 배치 B1 완료 — 인증(JWT+카카오 스텁)·User(탈퇴 6단계 TX)·Crew(승계 불변식) 수직 슬라이스, 클라 dio 개통·화면 7종(1a 라임), QA 3차 3자 대조 PASS(차단·경고 0). O-1=인앱 갈음, O-4=재로그인 신규 User 확정. 다음: B2 (`_workspace/11_planner_plan_B.md` §B2 — Race 컨텍스트·세션 화면·CI) | 커밋 (본 커밋) | 팀 실행 2회차 |

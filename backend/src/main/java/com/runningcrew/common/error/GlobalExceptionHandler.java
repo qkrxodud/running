@@ -1,6 +1,7 @@
 package com.runningcrew.common.error;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -26,7 +27,9 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({
             MethodArgumentNotValidException.class,
             MissingServletRequestParameterException.class,
-            MethodArgumentTypeMismatchException.class
+            MethodArgumentTypeMismatchException.class,
+            // 미지 enum 값·형식 오류 등 요청 본문 역직렬화 실패도 통일 400 VALIDATION_ERROR로.
+            HttpMessageNotReadableException.class
     })
     public ResponseEntity<ApiError> handleValidation(Exception ex) {
         ErrorCode code = ErrorCode.VALIDATION_ERROR;

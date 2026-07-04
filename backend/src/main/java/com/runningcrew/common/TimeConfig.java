@@ -25,6 +25,15 @@ public class TimeConfig {
      * 애플리케이션 전역 Jackson 설정. {@code application.yml}의 jackson 속성과 함께 적용되며,
      * 코드로도 명시해 회귀(숫자 타임스탬프 직렬화)를 막는다.
      */
+    /**
+     * 애플리케이션 전역 시계(UTC). 서비스는 {@code Instant.now()} 대신 이 Clock을 주입받아
+     * now를 얻는다 — 시각 판정(초대코드 만료 등)을 테스트에서 고정할 수 있게 하기 위함.
+     */
+    @Bean
+    java.time.Clock clock() {
+        return java.time.Clock.systemUTC();
+    }
+
     @Bean
     Jackson2ObjectMapperBuilderCustomizer timeSerializationCustomizer() {
         return builder -> {

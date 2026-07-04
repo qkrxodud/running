@@ -39,6 +39,9 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/runningcrew?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&characterEncoding=UTF-8
       SPRING_DATASOURCE_USERNAME: runningcrew
       SPRING_DATASOURCE_PASSWORD: runningcrew
+      # M0 카카오 키 확보 전까지 local 프로필(스텁 카카오 검증기). prod 전환 시 실 어댑터 배선 + JWT_SECRET 필수 주입.
+      SPRING_PROFILES_ACTIVE: local
+      JWT_SECRET: ${JWT_SECRET:-local-dev-only-jwt-secret-do-not-use-in-prod-0123456789abcdef}
       TZ: UTC
     ports:
       - "8080:8080"
