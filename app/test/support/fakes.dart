@@ -2,14 +2,19 @@ import 'package:running/app/auth_controller.dart';
 import 'package:running/core/geo/lat_lng.dart';
 import 'package:running/core/model/auth_dtos.dart';
 import 'package:running/core/model/crew_dtos.dart';
+import 'package:running/core/model/history_dtos.dart';
 import 'package:running/core/model/page_response.dart';
 import 'package:running/core/model/race_dtos.dart';
+import 'package:running/core/model/track_dtos.dart';
 import 'package:running/core/model/user_dtos.dart';
 import 'package:running/data/auth_repository.dart';
 import 'package:running/data/course_repository.dart';
 import 'package:running/data/crew_repository.dart';
+import 'package:running/data/history_repository.dart';
 import 'package:running/data/session_repository.dart';
+import 'package:running/data/track_repository.dart';
 import 'package:running/data/user_repository.dart';
+import 'package:running/platform/auth/kakao_auth_service.dart';
 
 /// 위젯 테스트용 페이크 — 서버 없이 API 계층을 대체한다(B1-C7 완료 기준).
 
@@ -152,10 +157,14 @@ StubAuthController stubAuthController(int userId, {String nickname = '나'}) {
 
 /// 코스 페이크 — 세션 생성 화면의 코스 선택 소스(시드 코스 대체).
 class FakeCourseRepository implements CourseRepository {
-  FakeCourseRepository({this.courses = const [], this.detail_});
+  FakeCourseRepository({this.courses = const [], this.detail_, this.onPromote});
 
   final List<CourseSummary> courses;
   final CourseDetail? detail_;
+
+  /// 승격 호출 관측·응답 주입. 인자: (crewId, sourceTrackRecordId, name).
+  final CourseDetail Function(int crewId, int trackRecordId, String name)?
+      onPromote;
 
   @override
   Future<PageResponse<CourseSummary>> listByCrew(int crewId,
@@ -191,6 +200,73 @@ class FakeCourseRepository implements CourseRepository {
         distanceM: 5000,
         start: LatLng(startLat, startLng),
         finish: LatLng(finishLat, finishLng),
+      );
+
+  @override
+  Future<CourseDetail> promote(
+    int crewId, {
+    required int sourceTrackRecordId,
+    required String name,
+  }) async =>
+      onPromote?.call(crewId, sourceTrackRecordId, name) ??
+      CourseDetail(
+        id: 200,
+        crewId: crewId,
+        name: name,
+        routePolyline: '_p~iF~ps|U',
+        distanceM: 5040,
+        start: const LatLng(37.5121, 127.0018),
+        finish: const LatLng(37.5288, 127.0219),
+      );
+}
+
+/// 트랙 결과 조회 페이크 — 결과 화면(C1/C2)용.
+class FakeTrackRepository implements TrackRepository {
+  FakeTrackRepository({this.resultOutcome, this.myTrackResponse});
+
+  final ResultQueryOutcome? resultOutcome;
+  final TrackRecordResponse? myTrackResponse;
+
+  @override
+  Future<ResultQueryOutcome> result(int sessionId) async =>
+      resultOutcome ?? const ResultPending();
+
+  @override
+  Future<TrackRecordResponse?> myTrack(int sessionId) async => myTrackResponse;
+
+  @override
+  Future<TrackRecordResponse> upload(
+          int sessionId, TrackUploadRequest request) async =>
+      throw UnimplementedError();
+}
+
+/// 히스토리·PB 페이크 — C5 화면용.
+class FakeHistoryRepository implements HistoryRepository {
+  FakeHistoryRepository({this.records = const [], this.pbs = const []});
+
+  final List<RecordHistoryItem> records;
+  final List<PersonalBestItem> pbs;
+
+  @override
+  Future<PageResponse<RecordHistoryItem>> myRecords(
+          {int page = 0, int size = 20}) async =>
+      PageResponse(
+        items: records,
+        page: page,
+        size: size,
+        totalElements: records.length,
+        totalPages: 1,
+      );
+
+  @override
+  Future<PageResponse<PersonalBestItem>> myPersonalBests(
+          {int page = 0, int size = 20}) async =>
+      PageResponse(
+        items: pbs,
+        page: page,
+        size: size,
+        totalElements: pbs.length,
+        totalPages: 1,
       );
 }
 
@@ -272,24 +348,39 @@ SessionDetail _stubSession(int id, RaceStatus status, {int courseId = 55}) =>
     );
 
 class FakeAuthRepository implements AuthRepository {
-  FakeAuthRepository({this.loginResponse});
+  FakeAuthRepository({this.loginResponse, this.throwOnLogin});
 
   final LoginResponse? loginResponse;
 
+  /// 주입 시 login 이 이 예외를 던진다(503 kapi 장애 UX 검증용).
+  final Object? throwOnLogin;
+
   @override
-  Future<LoginResponse> login(String kakaoAccessToken) async =>
-      loginResponse ??
-      LoginResponse(
-        tokens: const TokenPair(accessToken: 'a', refreshToken: 'r'),
-        tokenType: 'Bearer',
-        expiresIn: 1800,
-        isNewUser: true,
-        user: const AuthUser(id: 3, nickname: '러너', onboardingCompleted: false),
-      );
+  Future<LoginResponse> login(String kakaoAccessToken) async {
+    if (throwOnLogin != null) throw throwOnLogin!;
+    return loginResponse ??
+        LoginResponse(
+          tokens: const TokenPair(accessToken: 'a', refreshToken: 'r'),
+          tokenType: 'Bearer',
+          expiresIn: 1800,
+          isNewUser: true,
+          user:
+              const AuthUser(id: 3, nickname: '러너', onboardingCompleted: false),
+        );
+  }
 
   @override
   Future<TokenPair?> refresh(String refreshToken) async => null;
 
   @override
   Future<void> logout() async {}
+}
+
+/// 카카오 로그인 경계 페이크 — 항상 [token] 을 반환(취소=null 도 주입 가능).
+class FakeKakaoAuthService implements KakaoAuthService {
+  const FakeKakaoAuthService({this.token = 'fake-kakao-token'});
+  final String? token;
+
+  @override
+  Future<String?> login() async => token;
 }

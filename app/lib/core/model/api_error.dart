@@ -26,8 +26,12 @@ class AuthErrorCodes {
   /// refresh 갱신 불가 → 토큰 폐기·재로그인.
   static const refreshInvalid = 'AUTH_REFRESH_INVALID';
 
-  /// 카카오 토큰 검증 실패 (로그인 엔드포인트).
+  /// 카카오 토큰 검증 실패 (로그인 엔드포인트) — 사용자 자격 문제, 재시도/재입력.
   static const kakaoTokenInvalid = 'AUTH_KAKAO_TOKEN_INVALID';
+
+  /// 카카오 kapi **서버 장애**(503, auth-api §1 v0.1.1) — 사용자 탓 아님.
+  /// **잠시 후 재시도**(재로그인 유도 금지 — 무한 루프 방지). 401과 의미론 분리.
+  static const kakaoUnavailable = 'AUTH_KAKAO_UNAVAILABLE';
 }
 
 /// API 오류 예외 — 어댑터가 HTTP 오류를 이 형태로 정규화해 상위에 전달한다.

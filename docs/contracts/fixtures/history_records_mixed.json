@@ -1,0 +1,42 @@
+{
+  "items" : [ {
+    "track_record_id" : 4021,
+    "session_id" : 91,
+    "course_id" : 55,
+    "course_name" : "한강 5K",
+    "scheduled_at" : "2026-07-10T21:00:00Z",
+    "finish_status" : "FINISHED",
+    "rank" : 1,
+    "record_time_s" : 1502,
+    "total_distance_m" : 5021,
+    "avg_pace_s_per_km" : 299,
+    "is_pb" : true,
+    "session_cancelled" : false
+  }, {
+    "track_record_id" : 4102,
+    "session_id" : 88,
+    "course_id" : 55,
+    "course_name" : "한강 5K",
+    "scheduled_at" : "2026-07-03T21:00:00Z",
+    "finish_status" : "DNF",
+    "total_distance_m" : 3120,
+    "is_pb" : false,
+    "session_cancelled" : false
+  }, {
+    "track_record_id" : 4150,
+    "session_id" : 84,
+    "course_id" : 60,
+    "course_name" : "올림픽공원 3K",
+    "scheduled_at" : "2026-06-28T08:00:00Z",
+    "finish_status" : "FINISHED",
+    "record_time_s" : 1010,
+    "total_distance_m" : 3040,
+    "avg_pace_s_per_km" : 332,
+    "is_pb" : false,
+    "session_cancelled" : true
+  } ],
+  "page" : 0,
+  "size" : 20,
+  "total_elements" : 3,
+  "total_pages" : 1
+}

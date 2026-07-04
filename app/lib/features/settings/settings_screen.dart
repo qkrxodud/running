@@ -59,6 +59,12 @@ class SettingsScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             _tile(
+              icon: Icons.leaderboard_outlined,
+              label: '내 기록 · 개인 최고',
+              onTap: () => context.push('/history'),
+            ),
+            const SizedBox(height: 16),
+            _tile(
               icon: Icons.description_outlined,
               label: '이용약관',
               // 링크 열기는 도메인 URL 확정 후 배선(url_launcher 대기).

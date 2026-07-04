@@ -43,9 +43,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       await ref.read(authControllerProvider.notifier).loginWithKakao(token);
       // 라우터 redirect 가 상태 변화를 보고 이동시킨다.
     } on ApiException catch (e) {
-      setState(() => _error = e.code == AuthErrorCodes.kakaoTokenInvalid
-          ? '카카오 인증에 실패했습니다. 다시 시도해 주세요.'
-          : '로그인 실패: ${e.code}');
+      // 503(kapi 장애)은 사용자 탓 아님 → 재시도 안내(재로그인 루프 금지). 401과 분리.
+      setState(() => _error = switch (e.code) {
+            AuthErrorCodes.kakaoUnavailable =>
+              '카카오 로그인이 일시적으로 불안정해요. 잠시 후 다시 시도해 주세요.',
+            AuthErrorCodes.kakaoTokenInvalid =>
+              '카카오 인증에 실패했습니다. 다시 시도해 주세요.',
+            _ => '로그인 실패: ${e.code}',
+          });
     } on Object {
       setState(() => _error = '카카오 로그인 중 문제가 발생했습니다.');
     } finally {

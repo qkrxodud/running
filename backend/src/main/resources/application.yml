@@ -63,6 +63,11 @@ server:
 track:
   max-request-bytes: ${TRACK_MAX_REQUEST_BYTES:8388608}
 
+# 코스 승격(course-api §4 / C6) 최소 거리 하한 — 외부화. 미달 시 409 COURSE_PROMOTION_INELIGIBLE.
+# 1km: 1km 미만은 코스 레이스 의미 희박·FinishPolicy 코리도 50m 대비 판정 안정성(설계 62 §3.2).
+promotion:
+  min-distance-m: ${PROMOTION_MIN_DISTANCE_M:1000}
+
 # JWT (계약 auth-api.md 확정 스펙: HS256, access 30분 / refresh 30일)
 # 시크릿은 env JWT_SECRET(≥256bit) — 기본 프로필엔 기본값 없음(미설정 시 부팅 실패 fail-fast).
 jwt:

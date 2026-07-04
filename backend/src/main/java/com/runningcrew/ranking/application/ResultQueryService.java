@@ -27,6 +27,10 @@ public class ResultQueryService {
         if (!loadResultPort.isCrewMember(sessionId, userId)) {
             throw new ApiException(ErrorCode.FORBIDDEN);
         }
+        // CANCELLED 세션은 RaceResult 미생성 → 404(대기 아님, 개인 기록은 history-api §1). track-api v0.1.2 §3.
+        if (loadResultPort.isCancelled(sessionId)) {
+            throw new ApiException(ErrorCode.NOT_FOUND);
+        }
         return loadResultPort.findResult(sessionId)
                 .orElseThrow(() -> new ApiException(ErrorCode.RESULT_NOT_READY));
     }

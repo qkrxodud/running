@@ -43,6 +43,15 @@ public class ResultQueryAdapter implements LoadResultPort {
     }
 
     @Override
+    public boolean isCancelled(Long sessionId) {
+        Number c = (Number) em.createNativeQuery(
+                        "SELECT COUNT(*) FROM race_session WHERE id = ?1 AND status = 'CANCELLED'")
+                .setParameter(1, sessionId)
+                .getSingleResult();
+        return c.longValue() > 0;
+    }
+
+    @Override
     public Optional<ResultView> findResult(Long sessionId) {
         List<?> header = em.createNativeQuery(
                         "SELECT rr.finalized_at, c.id, c.name, c.distance_m "

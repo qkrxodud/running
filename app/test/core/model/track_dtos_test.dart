@@ -4,6 +4,8 @@ import 'package:running/core/model/enum_codec.dart';
 import 'package:running/core/model/track_dtos.dart';
 import 'package:running/core/tracking/track_point.dart';
 
+import '../../support/contract_fixtures.dart';
+
 /// track-api.md v0.1.1 DTO — 계약 값집합 대조(R-001)·키부재=null(P46-1)·
 /// avg_pace_s_per_km 필드명 고정(P46-2)·폴리라인 1e5 왕복.
 void main() {
@@ -148,31 +150,10 @@ void main() {
     });
   });
 
-  group('ResultResponse — 순위·키부재=null·avg_pace_s_per_km(P46-2)', () {
-    final json = {
-      'session_id': 91,
-      'course': {'id': 55, 'name': '한강 5K', 'distance_m': 5000},
-      'finalized_at': '2026-07-11T09:00:03Z',
-      'entries': [
-        {
-          'user_id': 3,
-          'nickname': '민수',
-          'status': 'FINISHED',
-          'rank': 1,
-          'record_time_s': 1502,
-          'total_distance_m': 5021,
-          'avg_pace_s_per_km': 299,
-          'is_pb': true,
-        },
-        {
-          // DNS: rank/record_time_s/total_distance_m/avg_pace_s_per_km 키 생략
-          'user_id': 9,
-          'nickname': '탈퇴한 러너',
-          'status': 'DNS',
-          'is_pb': false,
-        },
-      ],
-    };
+  group('ResultResponse — 공유 픽스처(서버 실바이트) 소비 · 키부재=null · avg_pace(P46-2)', () {
+    // P26-2/C8: 서버 SharedContractFixtureTest 가 생성한 동일 파일을 로드한다(손수 만든 맵 아님).
+    // 서버 DTO 가 drift 하면 이 파일이 바뀌고 아래 단정이 red → 앱측 역방향 가드.
+    final json = loadContractFixture('result_finished_dnf_dns.json');
 
     test('완주 항목: avg_pace_s_per_km 필드명으로 파싱', () {
       final res = RaceResultResponse.fromJson(json);
@@ -180,14 +161,24 @@ void main() {
       final first = res.entries.first;
       expect(first.status, ResultEntryStatus.finished);
       expect(first.rank, 1);
-      expect(first.avgPaceSPerKm, 299);
+      expect(first.avgPaceSPerKm, 299,
+          reason: 'avg_pace_s_per_km 필드명 일치(서버 @JsonProperty ↔ 앱 파서)');
       expect(first.isPb, isTrue);
     });
 
-    test('DNS 항목: 순위·기록 키 부재 → 전부 null, is_pb=false', () {
+    test('DNF 항목: rank/record/pace 키 생략(NON_NULL) → null, 거리 보존', () {
       final res = RaceResultResponse.fromJson(json);
-      final dns = res.entries.last;
-      expect(dns.status, ResultEntryStatus.dns);
+      final dnf = res.entries.firstWhere((e) => e.status == ResultEntryStatus.dnf);
+      expect(dnf.rank, isNull);
+      expect(dnf.recordTimeS, isNull);
+      expect(dnf.avgPaceSPerKm, isNull);
+      expect(dnf.totalDistanceM, 3120, reason: 'DNF 도 뛴 거리는 보존');
+      expect(dnf.isPb, isFalse);
+    });
+
+    test('DNS 항목: 순위·기록·거리 키 전부 부재 → null, is_pb=false', () {
+      final res = RaceResultResponse.fromJson(json);
+      final dns = res.entries.firstWhere((e) => e.status == ResultEntryStatus.dns);
       expect(dns.rank, isNull);
       expect(dns.recordTimeS, isNull);
       expect(dns.totalDistanceM, isNull);

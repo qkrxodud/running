@@ -1,0 +1,15 @@
+{
+  "items" : [ {
+    "course_id" : 55,
+    "course_name" : "한강 5K",
+    "distance_m" : 5000,
+    "best_record_time_s" : 1502,
+    "avg_pace_s_per_km" : 299,
+    "achieved_session_id" : 91,
+    "achieved_at" : "2026-07-10T21:00:00Z"
+  } ],
+  "page" : 0,
+  "size" : 20,
+  "total_elements" : 1,
+  "total_pages" : 1
+}

@@ -1,0 +1,30 @@
+{
+  "session_id" : 91,
+  "course" : {
+    "id" : 55,
+    "name" : "한강 5K",
+    "distance_m" : 5000
+  },
+  "finalized_at" : "2026-07-11T09:00:03Z",
+  "entries" : [ {
+    "user_id" : 3,
+    "nickname" : "민수",
+    "status" : "FINISHED",
+    "rank" : 1,
+    "record_time_s" : 1502,
+    "total_distance_m" : 5021,
+    "avg_pace_s_per_km" : 299,
+    "is_pb" : true
+  }, {
+    "user_id" : 8,
+    "nickname" : "다은",
+    "status" : "DNF",
+    "total_distance_m" : 3120,
+    "is_pb" : false
+  }, {
+    "user_id" : 9,
+    "nickname" : "탈퇴한 러너",
+    "status" : "DNS",
+    "is_pb" : false
+  } ]
+}

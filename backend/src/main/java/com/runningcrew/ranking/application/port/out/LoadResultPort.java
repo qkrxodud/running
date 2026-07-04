@@ -13,6 +13,12 @@ public interface LoadResultPort {
 
     boolean isCrewMember(Long sessionId, Long userId);
 
+    /**
+     * CANCELLED 세션 여부(track-api v0.1.2 §3). CANCELLED은 RaceResult 미생성 → 결과 조회 404(개인 기록은
+     * history-api §1). RESULT_NOT_READY(미확정 대기)와 구분.
+     */
+    boolean isCancelled(Long sessionId);
+
     /** 결과 확정(race_result 존재) 시 순위표. 미확정이면 empty(→ 409 RESULT_NOT_READY). */
     Optional<ResultView> findResult(Long sessionId);
 }

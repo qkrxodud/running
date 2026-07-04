@@ -5,6 +5,7 @@ import com.runningcrew.common.web.PageResponse;
 import com.runningcrew.race.adapter.in.web.dto.CourseDetailResponse;
 import com.runningcrew.race.adapter.in.web.dto.CourseSummaryResponse;
 import com.runningcrew.race.adapter.in.web.dto.CreateCourseRequest;
+import com.runningcrew.race.adapter.in.web.dto.PromoteCourseRequest;
 import com.runningcrew.race.application.CourseCommandService;
 import com.runningcrew.race.application.CourseQueryService;
 import jakarta.validation.Valid;
@@ -41,6 +42,16 @@ public class CourseController {
             @Valid @RequestBody CreateCourseRequest request) {
         CourseDetailResponse body = CourseDetailResponse.from(
                 commandService.createCourse(userId, crewId, request.toCommand()));
+        return ResponseEntity.status(HttpStatus.CREATED).body(body);
+    }
+
+    @PostMapping("/crews/{crewId}/courses/promote")
+    public ResponseEntity<CourseDetailResponse> promoteCourse(
+            @AuthUserId Long userId,
+            @PathVariable Long crewId,
+            @Valid @RequestBody PromoteCourseRequest request) {
+        CourseDetailResponse body = CourseDetailResponse.from(
+                commandService.promoteCourse(userId, crewId, request.toCommand()));
         return ResponseEntity.status(HttpStatus.CREATED).body(body);
     }
 

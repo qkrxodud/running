@@ -1,9 +1,10 @@
 # course-api 계약
 
-> **v0.1 · 2026-07-04 · 신규(contract-first)** — 서버 구현(B2-S1)·앱 소비(B2-C2/C3)는 이 문서 기준(3자 대조의 진실).
-> 근거: `22_analyst_design_B2.md` §1(Course 애그리거트·폴리라인 1e5·발행 후 불변), `domain-model` 스킬 Race 컨텍스트, `V1__init.sql` course DDL. 공통 규약은 `conventions.md`.
+> **v0.2 · 2026-07-05** — 서버 구현·앱 소비는 이 문서 기준(3자 대조의 진실).
+> 근거: `22_analyst_design_B2.md` §1(Course 애그리거트·폴리라인 1e5·발행 후 불변), `62_analyst_design_M2C.md` §3(승격), `domain-model` 스킬 Race 컨텍스트, `V1__init.sql` course DDL. 공통 규약은 `conventions.md`(v0.1.3).
 >
 > **변경 이력**
+> - v0.2 (2026-07-05, domain-analyst): M2-C — §4 코스 승격 엔드포인트 append(`POST /crews/{crewId}/courses/promote` — 내 과거 FINISHED 트랙 → 새 Course 발행). **자유생성(§1)은 크루장 유지, 승격(§4)은 크루 ACTIVE 멤버 누구나·본인 FINISHED 트랙만**(별도 유스케이스 — 실주행 기여). 거리 하한 1km·distance 서버 재확정·`COURSE_PROMOTION_INELIGIBLE`. §1~§3 무변경.
 > - v0.1 (2026-07-04, domain-analyst): 신규. 코스 생성(크루장)·목록·상세. 폴리라인 precision 1e5·tie half-away-from-zero 규약. 발행 후 불변(수정/삭제 API 미노출) 의미론.
 
 모든 엔드포인트 `auth: required` (`Authorization: Bearer {access_token}` — 401 규약은 auth-api.md §3).
@@ -22,7 +23,7 @@
 
 ## 오류 코드 (본 API 전수)
 
-`VALIDATION_ERROR`(400) · `FORBIDDEN`(403) · `NOT_FOUND`(404) · `CREW_CLOSED`(409) · `COURSE_IMMUTABLE`(409, 예약)
+`VALIDATION_ERROR`(400) · `FORBIDDEN`(403) · `NOT_FOUND`(404) · `CREW_CLOSED`(409) · `COURSE_IMMUTABLE`(409, 예약) · `COURSE_PROMOTION_INELIGIBLE`(409, §4)
 
 ---
 
@@ -124,8 +125,50 @@
 
 ---
 
+## 4. POST /api/v1/crews/{crewId}/courses/promote — 과거 주행 코스 승격 (M2-C)
+
+**크루 ACTIVE 멤버 누구나**(크루장 전용 아님 — 자유생성 §1과 구분). 내가 실제 완주한 과거 트랙을 새 Course로 발행. 실주행 검증 경로를 크루 코스 풀에 기여하는 별도 유스케이스.
+
+> **권한 구분(설계 §3.2)**: §1 자유생성(임의 폴리라인 직수신)은 크루장 전용 유지 — 세션 발행 재료 관리. §4 승격은 개인 실주행 기반이라 멤버 개방. 생성된 Course는 §1과 동일하게 **크루 소유·불변**, 세션 발행은 크루장 권한 그대로.
+
+### 요청
+```json
+{
+  "source_track_record_id": 4021,
+  "name": "내가 뛴 한강 코스"
+}
+```
+| 필드 | 타입 | 제약 | 비고 |
+|---|---|---|---|
+| source_track_record_id | int64 | 필수 | **본인** track_record만. history-api §1 `track_record_id` |
+| name | string | 필수, trim 후 1~50자 | 새 코스명 |
+
+### 승격 자격 게이트 (전부 충족해야 발행)
+1. `source_track_record_id`가 **호출자 본인** 트랙(아니면 403).
+2. **`finish_status = FINISHED`**(DNF·미완주 거부 — 경로 미완/이탈 가능).
+3. **`total_distance_m ≥ promotion.min_distance_m`**(초기값 **1000m=1km**, 서버 설정 외부화). 미달 거부.
+4. CANCELLED 세션의 본인 FINISHED 트랙도 승격 가능(트랙 품질은 완주·거리로 판정, 세션 취소는 코스 품질과 무관 — 설계 §8).
+
+### 서버 처리 (불변 원칙 준수)
+- **refined_payload**(정제 트랙)를 payload 전용 포트로 로드 → 폴리라인 인코딩(1e5) → 새 Course의 `route_polyline`.
+- **`distance_m`은 refined 폴리라인에서 서버 재계산·확정**(CO-B3 — track_record 저장값·클라값 불신). `start/finish_lat/lng`은 refined 트랙 양 끝점.
+- 새 Course는 **불변 애그리거트**(§1과 동일 — 수정/삭제 없음). `created_by` = 호출자.
+
+### 응답 201
+코스 상세(§3 CourseDetail). `distance_m`·좌표는 서버 확정값.
+
+### 오류
+- `400 VALIDATION_ERROR` — name 길이/누락, source_track_record_id 누락.
+- `403 FORBIDDEN` — 크루 ACTIVE 멤버 아님 **또는 타인 트랙 승격 시도**(존재 누설 방지 — 본인 트랙 아니면 403).
+- `404 NOT_FOUND` — crew 없음 / 트랙 없음(본인 트랙 부재).
+- `409 CREW_CLOSED` — CLOSED 크루.
+- `409 COURSE_PROMOTION_INELIGIBLE` — **미완주(DNF)** 또는 **거리 하한(1km) 미달**. (message로 사유 구분: 클라는 code로 분기, 상세 안내는 message.)
+
+---
+
 ## 범위 밖 (여기 명시만 — 이후 배치)
 
-- 코스 **수정·삭제 API**: 발행 후 불변 원칙상 v0.1 미노출(불변 애그리거트). 삭제/관리 도구 도입 시 `COURSE_IMMUTABLE` 게이트(OPEN 이상 세션 참조 거부) 동반.
+- 코스 **수정·삭제 API**: 발행 후 불변 원칙상 미노출(불변 애그리거트). 삭제/관리 도구 도입 시 `COURSE_IMMUTABLE` 게이트(OPEN 이상 세션 참조 거부) 동반.
+- 승격 **GPS 공백 상한** 게이트: v0.2는 거리 하한만. 공백 상한(gps_gap_count 기반)은 튜닝 데이터 축적 후(설계 §8).
 - 지도에서 경로 그리기(탭 좌표 수집) 등록 UI: 네이버 지도 Client ID 대기(계획 §4). v0.1은 인코딩 폴리라인 직수신 + dev 시드 코스로 성립.
 - distance_m 정제 후 주행거리 비교(완주 판정): M2 FinishPolicy 소관.

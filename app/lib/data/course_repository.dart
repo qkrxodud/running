@@ -24,6 +24,15 @@ abstract interface class CourseRepository {
     required double finishLat,
     required double finishLng,
   });
+
+  /// POST /crews/{crewId}/courses/promote — 과거 완주 트랙 코스 승격(M2-C, §4).
+  /// 크루 ACTIVE 멤버 누구나·본인 FINISHED 트랙만. distance_m·좌표는 서버가
+  /// refined 폴리라인에서 재확정(CO-B3). 자격 미달 시 409 COURSE_PROMOTION_INELIGIBLE.
+  Future<CourseDetail> promote(
+    int crewId, {
+    required int sourceTrackRecordId,
+    required String name,
+  });
 }
 
 class HttpCourseRepository implements CourseRepository {
@@ -69,6 +78,23 @@ class HttpCourseRepository implements CourseRepository {
             'start_lng': startLng,
             'finish_lat': finishLat,
             'finish_lng': finishLng,
+          },
+        );
+        return CourseDetail.fromJson(r.data!);
+      });
+
+  @override
+  Future<CourseDetail> promote(
+    int crewId, {
+    required int sourceTrackRecordId,
+    required String name,
+  }) =>
+      _guard(() async {
+        final r = await _dio.post<Map<String, dynamic>>(
+          '/api/v1/crews/$crewId/courses/promote',
+          data: {
+            'source_track_record_id': sourceTrackRecordId,
+            'name': name,
           },
         );
         return CourseDetail.fromJson(r.data!);

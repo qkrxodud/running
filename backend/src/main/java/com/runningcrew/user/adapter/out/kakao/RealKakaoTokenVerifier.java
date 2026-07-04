@@ -2,6 +2,7 @@ package com.runningcrew.user.adapter.out.kakao;
 
 import com.runningcrew.user.application.port.out.KakaoTokenInvalidException;
 import com.runningcrew.user.application.port.out.KakaoTokenVerifier;
+import com.runningcrew.user.application.port.out.KakaoUnavailableException;
 import com.runningcrew.user.domain.KakaoAccount;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,13 +58,13 @@ public class RealKakaoTokenVerifier implements KakaoTokenVerifier {
                 // 카카오가 토큰을 명확히 거부(만료·위조·형식 오류).
                 throw new KakaoTokenInvalidException("카카오 토큰 검증에 실패했습니다(kapi " + status + ").");
             }
-            // 5xx 등 — 토큰 문제 아님(상위 장애). 원인을 WARN으로 남긴다.
+            // 5xx 등 — 토큰 문제 아님(상위 장애) → 503 AUTH_KAKAO_UNAVAILABLE(계약 auth-api §1 v0.1.1).
             log.warn("카카오 user/me 비정상 응답: status={} body={}", status, e.getResponseBodyAsString());
-            throw new KakaoTokenInvalidException("카카오 인증 서버 오류(kapi " + status + ").");
+            throw new KakaoUnavailableException("카카오 인증 서버 오류(kapi " + status + ").");
         } catch (ResourceAccessException e) {
-            // 연결 거부·타임아웃(연결 3s/응답 5s 초과) — 상위 장애.
+            // 연결 거부·타임아웃(연결 3s/응답 5s 초과) — 상위 장애 → 503(재시도 대상, 재로그인 아님).
             log.warn("카카오 user/me 접속 실패(타임아웃/연결): {}", e.getMessage());
-            throw new KakaoTokenInvalidException("카카오 인증 서버에 접속하지 못했습니다.");
+            throw new KakaoUnavailableException("카카오 인증 서버에 접속하지 못했습니다.");
         }
 
         if (body == null || body.id() == null) {

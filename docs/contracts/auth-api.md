@@ -1,8 +1,12 @@
 # auth-api 계약
 
-> **v0.1 · 2026-07-04 · 계약 우선 초안(contract-first)** — 서버 구현(B1-S1)과 앱 인증 플로우(B1-C2)는 이 문서 기준.
-> 근거: `12_analyst_design_B.md` §2(JWT 스펙 확정), planner B1-S1/S5. 공통 규약은 `conventions.md`.
-> **스텁 모드**: M0 카카오 앱 키 미확보 — 실 카카오 검증은 대기, local/dev 프로필은 스텁 검증기로 동작(§4).
+> **v0.1.1 · 2026-07-05** — 서버 구현과 앱 인증 플로우는 이 문서 기준.
+> 근거: `12_analyst_design_B.md` §2(JWT 스펙 확정), `62_analyst_design_M2C.md` §0(kapi 장애 코드), planner B1-S1/S5. 공통 규약은 `conventions.md`(v0.1.3).
+> **스텁·실 카카오 공존**: local/dev 프로필은 스텁 검증기, prod는 실 카카오 검증기로 **프로필 분기 공존**(§4). 카카오 앱 키 확보 시 실 어댑터 활성.
+>
+> **변경 이력**
+> - v0.1.1 (2026-07-05, domain-analyst): M2-C 보류분 정리 — §1 오류에 `503 AUTH_KAKAO_UNAVAILABLE`(kapi 장애, 재시도 대상 — 401과 분리) 추가. §4 스텁 문구 최신화(삭제→프로필 분기 공존, 스텁은 kapi 미호출이라 503 미발생).
+> - v0.1 (2026-07-04, domain-analyst): 계약 우선 초안. JWT HS256 access 30분/refresh 30일 쌍회전, login/refresh/401 규약, 스텁 모드.
 
 ## 토큰 개요 (확정 스펙)
 
@@ -48,7 +52,8 @@
 | user | object | `id int64`, `nickname string`(placeholder 가능), `onboarding_completed bool` — false면 클라는 온보딩(닉네임 설정)으로 |
 
 ### 오류
-- `401 AUTH_KAKAO_TOKEN_INVALID` — 카카오 토큰 검증 실패(만료·위조 포함).
+- `401 AUTH_KAKAO_TOKEN_INVALID` — 카카오 토큰 **검증 실패**(만료·위조 — 사용자 자격 문제). **클라: 재로그인**.
+- `503 AUTH_KAKAO_UNAVAILABLE` — 카카오 kapi **서버 장애**(다운·타임아웃·5xx — 검증 자체 불가). **클라: 사용자 탓 아님, 잠시 후 재시도**(재로그인 유도 금지 — 무한 루프 방지). 401과 의미론 분리(conventions §4 v0.1.3).
 - `400 VALIDATION_ERROR` — 필드 누락.
 
 ---
@@ -89,12 +94,15 @@
 
 ---
 
-## 4. 스텁 모드 (local/dev 프로필 전용)
+## 4. 검증기 프로필 분기 (스텁 ↔ 실 카카오 공존)
 
-M0 카카오 앱 키 확보 전까지 서버 local/dev 프로필은 `StubKakaoTokenVerifier`로 동작한다:
+카카오 토큰 검증기는 **프로필 분기로 공존**한다 — 카카오 앱 키 확보 여부와 무관하게 계약(§1~§3)은 불변, 포트 뒤 구현만 교체:
 
-- `kakao_access_token` 형식: **`stub:{fake_kakao_id}`** (예: `stub:dev-user-1`) → 해당 fake id의 KakaoAccount로 수용. 같은 fake id 재로그인 = 같은 User(실카카오와 동일 의미론).
-- 그 외 문자열 전부 `401 AUTH_KAKAO_TOKEN_INVALID`.
-- **prod/프로필 미지정에서는 스텁 빈이 없어 부팅 실패(fail-fast)** — 스텁이 운영에 노출될 수 없다.
-- 클라 dev 로그인 화면(B1-C2)은 이 형식으로 전송. prod 빌드엔 미포함.
-- 실 카카오 어댑터 배선 시 이 절만 삭제되고 §1~§3은 무변경(포트 뒤 교체).
+- **local/dev**: `StubKakaoTokenVerifier`.
+  - `kakao_access_token` 형식 **`stub:{fake_kakao_id}`**(예 `stub:dev-user-1`) → 해당 fake id의 KakaoAccount로 수용. 같은 fake id 재로그인 = 같은 User(실카카오와 동일 의미론).
+  - 그 외 문자열 전부 `401 AUTH_KAKAO_TOKEN_INVALID`.
+  - **스텁은 kapi를 호출하지 않으므로 `503 AUTH_KAKAO_UNAVAILABLE` 미발생**(장애 경로 없음). 503은 실 카카오 검증기 활성 시에만 발생.
+- **prod**: `RealKakaoTokenVerifier`(카카오 앱 키 필요). kapi 호출 → 검증 실패는 401, kapi 장애(다운·타임아웃·5xx)는 **503 AUTH_KAKAO_UNAVAILABLE**.
+  - **prod에는 스텁 빈이 없어**(프로필 미주입) `stub:` 토큰이 통하지 않는다 — 스텁이 운영에 노출될 수 없다(fail-safe).
+- 클라 dev 로그인 화면(B1-C2)은 `stub:` 형식으로 전송(dev 빌드 한정). prod 빌드는 카카오 SDK 실 토큰.
+- **교체는 포트 뒤 어댑터 스위칭** — §1~§3 계약 무변경. (v0.1 "이 절만 삭제" 표현은 폐기 — 스텁은 dev 자산으로 상시 공존.)

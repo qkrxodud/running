@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.runningcrew.user.application.port.out.KakaoTokenInvalidException;
+import com.runningcrew.user.application.port.out.KakaoUnavailableException;
 import com.runningcrew.user.domain.KakaoAccount;
 import com.sun.net.httpserver.HttpServer;
 import java.io.IOException;
@@ -96,20 +97,22 @@ class RealKakaoTokenVerifierTest {
     }
 
     @Test
-    void 응답_타임아웃이면_KakaoTokenInvalidException() throws IOException {
-        // read timeout 300ms인데 서버는 1s 지연 → ResourceAccessException(SocketTimeout) → 장애 경로.
+    void 응답_타임아웃이면_KakaoUnavailableException_장애경로() throws IOException {
+        // read timeout 300ms인데 서버는 1s 지연 → ResourceAccessException(SocketTimeout) → 503 장애 경로.
+        // M2-C(R-007 인접): 토큰 문제 아님 → 503 AUTH_KAKAO_UNAVAILABLE(재시도, 재로그인 아님).
         startServer(200, "{\"id\": 1}", 1000);
 
         assertThatThrownBy(() -> verifierWithTimeouts(Duration.ofMillis(300)).verify("slow-token"))
-                .isInstanceOf(KakaoTokenInvalidException.class);
+                .isInstanceOf(KakaoUnavailableException.class);
     }
 
     @Test
-    void kapi_5xx이면_KakaoTokenInvalidException_장애경로() throws IOException {
+    void kapi_5xx이면_KakaoUnavailableException_장애경로() throws IOException {
+        // 5xx는 토큰 자격 문제가 아닌 상위 장애 → 503 AUTH_KAKAO_UNAVAILABLE(계약 auth-api §1 v0.1.1).
         startServer(503, "{\"msg\": \"service unavailable\"}", 0);
 
         assertThatThrownBy(() -> verifierWithTimeouts(Duration.ofSeconds(2)).verify("any-token"))
-                .isInstanceOf(KakaoTokenInvalidException.class);
+                .isInstanceOf(KakaoUnavailableException.class);
     }
 
     @Test

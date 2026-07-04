@@ -5,6 +5,7 @@ import com.runningcrew.common.error.ErrorCode;
 import com.runningcrew.user.application.port.out.IssuedTokens;
 import com.runningcrew.user.application.port.out.KakaoTokenInvalidException;
 import com.runningcrew.user.application.port.out.KakaoTokenVerifier;
+import com.runningcrew.user.application.port.out.KakaoUnavailableException;
 import com.runningcrew.user.application.port.out.TokenProvider;
 import com.runningcrew.user.application.port.out.TokenRefreshInvalidException;
 import com.runningcrew.user.application.port.out.UserRepository;
@@ -46,7 +47,9 @@ public class AuthService {
         try {
             account = kakaoTokenVerifier.verify(kakaoAccessToken);
         } catch (KakaoTokenInvalidException e) {
-            throw new ApiException(ErrorCode.AUTH_KAKAO_TOKEN_INVALID);
+            throw new ApiException(ErrorCode.AUTH_KAKAO_TOKEN_INVALID);   // 401 — 자격 문제
+        } catch (KakaoUnavailableException e) {
+            throw new ApiException(ErrorCode.AUTH_KAKAO_UNAVAILABLE);     // 503 — 의존성 장애(재시도)
         }
 
         Instant now = clock.instant();

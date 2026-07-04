@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../app/app_theme.dart';
 import '../../app/providers.dart';
@@ -180,6 +181,19 @@ class _SessionDetailScreenState extends ConsumerState<SessionDetailScreen> {
 
         const SizedBox(height: 24),
         _actions(session, isLeader: isLeader, isClosed: isClosed, myPart: myPart),
+
+        // 결과 진입 — 집계 중(FINALIZING)이면 결과 대기 화면(C2), 완료면 순위표(C1).
+        if (session.status == RaceStatus.finalizing ||
+            session.status == RaceStatus.completed) ...[
+          const SizedBox(height: 12),
+          FilledButton.icon(
+            onPressed: () => context.push('/sessions/${session.id}/result'),
+            icon: const Icon(Icons.leaderboard),
+            label: Text(session.status == RaceStatus.completed
+                ? '결과 · 순위 보기'
+                : '결과 확인 (집계 중)'),
+          ),
+        ],
 
         const SizedBox(height: 28),
         const Text(

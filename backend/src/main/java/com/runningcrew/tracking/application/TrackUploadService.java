@@ -80,8 +80,11 @@ public class TrackUploadService {
         if (!supportPort.isActiveCrewMember(sessionId, userId)) {
             throw new ApiException(ErrorCode.FORBIDDEN);
         }
-        // ③ 상태 부적합 / 확정 완료 / 미등록 → 409 (크루 멤버에게만 노출)
-        if (!("OPEN".equals(status) || "RUNNING".equals(status) || "FINALIZING".equals(status))) {
+        // ③ 상태 부적합 / 확정 완료 / 미등록 → 409 (크루 멤버에게만 노출).
+        // CANCELLED 수락(track-api v0.1.2 / C7): 취소 세션 트랙도 개인 기록으로 보존(계획서 §5.2).
+        // 거부: COMPLETED(확정 후 불변)·DRAFT(미발행). CANCELLED은 순위·PB 미트리거(마감 파이프라인 no-op).
+        if (!("OPEN".equals(status) || "RUNNING".equals(status) || "FINALIZING".equals(status)
+                || "CANCELLED".equals(status))) {
             throw new ApiException(ErrorCode.SESSION_STATE_INVALID,
                     "이 세션 상태(" + status + ")에서는 업로드할 수 없습니다.");
         }

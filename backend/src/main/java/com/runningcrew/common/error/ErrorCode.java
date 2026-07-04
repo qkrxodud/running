@@ -29,7 +29,10 @@ public enum ErrorCode {
     TRACK_PAYLOAD_INVALID(HttpStatus.BAD_REQUEST, "트랙 페이로드가 유효하지 않습니다."),
     TRACK_ARRAY_LENGTH_MISMATCH(HttpStatus.BAD_REQUEST, "트랙 병렬 배열 길이가 일치하지 않습니다."),
     TRACK_TOO_LARGE(HttpStatus.PAYLOAD_TOO_LARGE, "트랙 크기 상한을 초과했습니다."),
-    RESULT_NOT_READY(HttpStatus.CONFLICT, "결과가 아직 확정되지 않았습니다.");
+    RESULT_NOT_READY(HttpStatus.CONFLICT, "결과가 아직 확정되지 않았습니다."),
+    // M2-C(계약 conventions.md §4 v0.1.3): 승격 자격 미달·kapi 장애.
+    COURSE_PROMOTION_INELIGIBLE(HttpStatus.CONFLICT, "코스로 승격할 수 없는 트랙입니다."),
+    AUTH_KAKAO_UNAVAILABLE(HttpStatus.SERVICE_UNAVAILABLE, "카카오 인증 서버가 일시적으로 불안정합니다. 잠시 후 다시 시도해 주세요.");
 
     private final HttpStatus status;
     private final String defaultMessage;

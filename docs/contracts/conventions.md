@@ -4,6 +4,7 @@
 > 관리자: domain-analyst. 규범: `domain-model` 스킬, 계획서 §5~§7.
 >
 > **변경 이력**
+> - v0.1.3 (2026-07-05, domain-analyst): M2-C — §4 상태 매핑에 `503 SERVICE_UNAVAILABLE`(의존성 일시 장애) 추가, code 집합에 `AUTH_KAKAO_UNAVAILABLE`(503 — kapi 장애, auth-api §1), `COURSE_PROMOTION_INELIGIBLE`(409 — 코스 승격 자격 미달, course-api §4) 추가.
 > - v0.1.2 (2026-07-04, domain-analyst): M2-A — §4 code 집합에 트랙 업로드/결과 5종 추가(`TRACK_ALREADY_UPLOADED`, `TRACK_PAYLOAD_INVALID`, `TRACK_ARRAY_LENGTH_MISMATCH`, `TRACK_TOO_LARGE`, `RESULT_NOT_READY`), §9 대량 배열 시각 표현 예외 신설(track 업로드 payload의 timestamp 배열은 epoch millis). 상세는 track-api.md가 진실.
 > - v0.1.1 (2026-07-04, domain-analyst): 배치 B1 — §4 code 집합에 AUTH_* 3종 추가, §5 인증 미규정 해소(상세는 auth-api.md가 진실), §6 페이지네이션 offset 방식 확정.
 > - v0.1 (2026-07-04, domain-analyst): 계약 우선 초안.
@@ -42,8 +43,10 @@
   - `401 UNAUTHORIZED` — 인증 실패. code별 클라 행동(만료→갱신 vs 재로그인)은 auth-api.md §3 규약.
   - `403 FORBIDDEN` — 권한 부족(크루장 전용 작업을 멤버가 호출 등).
   - `404 NOT_FOUND` — 자원 없음.
-  - `409 CONFLICT` — 상태 충돌(이미 참가함, 만료된 초대코드, 코스 불변 위반 등).
-- 공통 `code` 집합: `VALIDATION_ERROR`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `INVITE_CODE_INVALID`, `INVITE_CODE_EXPIRED`, `INVITE_CODE_EXHAUSTED`, `ALREADY_JOINED`, `CREW_CLOSED`, `COURSE_IMMUTABLE`, `SESSION_STATE_INVALID` + **v0.1.1 추가(401 세분)**: `AUTH_KAKAO_TOKEN_INVALID`, `AUTH_TOKEN_EXPIRED`, `AUTH_REFRESH_INVALID` (의미·클라 플로우는 auth-api.md §3) + **v0.1.2 추가(M2 트랙/결과)**: `TRACK_ALREADY_UPLOADED`(409 — 동일 participation 재업로드, 다른 내용), `TRACK_PAYLOAD_INVALID`(400 — 폴리라인 디코딩 실패·시간 역순/미래), `TRACK_ARRAY_LENGTH_MISMATCH`(400 — 병렬 배열 길이 불일치), `TRACK_TOO_LARGE`(413 — 크기 상한 초과), `RESULT_NOT_READY`(409 — 결과 미확정 세션의 결과 조회). 의미는 track-api.md. (이후 배치에서 확장)
+  - `409 CONFLICT` — 상태 충돌(이미 참가함, 만료된 초대코드, 코스 불변 위반, 승격 자격 미달 등).
+  - `413 PAYLOAD_TOO_LARGE` — 요청 본문 상한 초과(track 업로드 크기 — track-api §0).
+  - `503 SERVICE_UNAVAILABLE` — **외부 의존성 일시 장애**(예 카카오 kapi 다운). "당신 자격 문제"(401)와 구분 — 클라 행동은 **재입력·재로그인이 아니라 잠시 후 재시도**.
+- 공통 `code` 집합: `VALIDATION_ERROR`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `INVITE_CODE_INVALID`, `INVITE_CODE_EXPIRED`, `INVITE_CODE_EXHAUSTED`, `ALREADY_JOINED`, `CREW_CLOSED`, `COURSE_IMMUTABLE`, `SESSION_STATE_INVALID` + **v0.1.1 추가(401 세분)**: `AUTH_KAKAO_TOKEN_INVALID`, `AUTH_TOKEN_EXPIRED`, `AUTH_REFRESH_INVALID` (의미·클라 플로우는 auth-api.md §3) + **v0.1.2 추가(M2 트랙/결과)**: `TRACK_ALREADY_UPLOADED`(409 — 동일 participation 재업로드, 다른 내용), `TRACK_PAYLOAD_INVALID`(400 — 폴리라인 디코딩 실패·시간 역순/미래), `TRACK_ARRAY_LENGTH_MISMATCH`(400 — 병렬 배열 길이 불일치), `TRACK_TOO_LARGE`(413 — 크기 상한 초과), `RESULT_NOT_READY`(409 — 결과 미확정 세션의 결과 조회) + **v0.1.3 추가(M2-C)**: `AUTH_KAKAO_UNAVAILABLE`(503 — 카카오 kapi 장애, 재시도 대상. auth-api §1), `COURSE_PROMOTION_INELIGIBLE`(409 — 코스 승격 소스 트랙 자격 미달: 미완주·거리 하한 미달. course-api §4). 의미는 각 문서. (이후 배치에서 확장)
 
 ## 5. 인증
 

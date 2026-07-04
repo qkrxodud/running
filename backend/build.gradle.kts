@@ -47,4 +47,7 @@ dependencies {
 
 tasks.withType<Test> {
     useJUnitPlatform()
+    // 공유 계약 픽스처 (재)생성 스위치 전달(P26-2/C8). 기본 off — 지정 시에만 포워드.
+    // 사용: ./gradlew test -Dfixtures.write=true --tests '*SharedContractFixtureTest'
+    System.getProperty("fixtures.write")?.let { systemProperty("fixtures.write", it) }
 }

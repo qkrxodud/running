@@ -6,8 +6,10 @@ import '../features/crew/crew_create_screen.dart';
 import '../features/crew/crew_detail_screen.dart';
 import '../features/crew/crew_home_screen.dart';
 import '../features/crew/crew_join_screen.dart';
+import '../features/history/history_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import '../features/auth/login_screen.dart';
+import '../features/race/result_screen.dart';
 import '../features/race/session_create_screen.dart';
 import '../features/race/session_detail_screen.dart';
 import '../features/race/session_list_screen.dart';
@@ -44,6 +46,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(path: '/onboarding', builder: (c, s) => const OnboardingScreen()),
       GoRoute(path: '/', builder: (c, s) => const CrewHomeScreen()),
       GoRoute(path: '/settings', builder: (c, s) => const SettingsScreen()),
+      GoRoute(path: '/history', builder: (c, s) => const HistoryScreen()),
       // 정적 경로를 :crewId 앞에 선언 (순서 매칭 — 'create'/'join' 우선).
       GoRoute(
         path: '/crews/create',
@@ -63,6 +66,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/crews/:crewId',
         builder: (c, s) => CrewDetailScreen(crewId: _crewId(s.pathParameters)),
+      ),
+      // 결과 화면을 상세보다 먼저 선언(정적 세그먼트 'result' 우선 매칭).
+      GoRoute(
+        path: '/sessions/:sessionId/result',
+        builder: (c, s) {
+          final id = int.tryParse(s.pathParameters['sessionId'] ?? '') ?? -1;
+          return SessionResultScreen(sessionId: id);
+        },
       ),
       GoRoute(
         path: '/sessions/:sessionId',

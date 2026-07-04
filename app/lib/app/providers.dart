@@ -8,8 +8,10 @@ import '../data/app_version_repository.dart';
 import '../data/auth_repository.dart';
 import '../data/course_repository.dart';
 import '../data/crew_repository.dart';
+import '../data/history_repository.dart';
 import '../data/session_repository.dart';
 import '../data/token_store.dart';
+import '../data/track_repository.dart';
 import '../data/user_repository.dart';
 import '../platform/auth/kakao_auth_service.dart';
 import 'app_config.dart';
@@ -64,6 +66,16 @@ final courseRepositoryProvider = Provider<CourseRepository>(
 
 final sessionRepositoryProvider = Provider<SessionRepository>(
   (ref) => HttpSessionRepository(dio: ref.watch(dioProvider)),
+);
+
+/// 트랙 업로드·결과 조회 (track-api.md). M2-B0 HttpTrackRepository 배선.
+final trackRepositoryProvider = Provider<TrackRepository>(
+  (ref) => HttpTrackRepository(dio: ref.watch(dioProvider)),
+);
+
+/// 내 기록 히스토리·PB (history-api.md, M2-C).
+final historyRepositoryProvider = Provider<HistoryRepository>(
+  (ref) => HttpHistoryRepository(dio: ref.watch(dioProvider)),
 );
 
 final appVersionRepositoryProvider = Provider<AppVersionRepository>(

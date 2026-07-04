@@ -4,6 +4,7 @@
 > 근거: `42_analyst_design_M2A.md`, `domain-model` 스킬 Tracking·Ranking 컨텍스트, 계획서 §4 레이스 규칙·§5.3·§5.4, `V1__init.sql`(track_record·track_payload·race_result·rank_entry). 공통 규약은 `conventions.md`(v0.1.2 — 오류코드·§9 배열 시각 예외).
 >
 > **변경 이력**
+> - v0.1.2 (2026-07-05, domain-analyst): M2-C — §1 **CANCELLED 세션 업로드 수락**으로 개정(계획서 §5.2 "뛰던 트랙 개인 기록 보존" — 거부하면 노력 증발). CANCELLED은 순위·PB 미트리거·개인 기록 보존(session_id 유지·집계 제외). §3 결과 조회의 CANCELLED 처리 명시(RaceResult 미생성 → 404).
 > - v0.1.1 (2026-07-04, domain-analyst): **W46-2/R-007 해소** — §1·§2 오류코드 자기모순 제거. 업로드 권한 경계를 **크루 멤버십=403 / 멤버지만 미등록=409**로 분리(선택지 b). 근거: 계약 전체 불변식 "403=크루 경계"(crew·course·session 비멤버 조회 전부 403), Crew invite-only 규범(비멤버에게 세션 존재·상태 누설 금지). 평가 순서 명시. **서버 수정 필요**(현 구현은 일괄 409 — backend-dev 인계). session-api §6 start의 동일 모순도 병행 개정.
 > - v0.1 (2026-07-04, domain-analyst): 신규. 트랙 업로드(인코딩 폴리라인+병렬배열, 멱등/재업로드 정책 O-M2-4)·업로드 상태 조회·결과/순위 조회. client_meta 3키 격리. epoch millis 시각 배열.
 
@@ -39,7 +40,9 @@
 
 ## 1. POST /api/v1/sessions/{sessionId}/track — 트랙 업로드
 
-**세션 소유 크루의 ACTIVE 멤버 + 참가자 본인**. 완주 후(로컬 FINISHED_LOCAL) 사후 업로드. **선 register 필요**(크루 멤버지만 participation 부재 시 409). 세션 상태 `OPEN|RUNNING|FINALIZING`에서 수신(마감 직전 도착 내성 — FINALIZING 중 아직 미확정이면 수용, 결과 확정 후엔 거부). `COMPLETED|CANCELLED|DRAFT`는 409.
+**세션 소유 크루의 ACTIVE 멤버 + 참가자 본인**. 완주 후(로컬 FINISHED_LOCAL) 사후 업로드. **선 register 필요**(크루 멤버지만 participation 부재 시 409). 세션 상태 `OPEN|RUNNING|FINALIZING|CANCELLED`에서 수신(마감 직전 도착 내성). **거부: `COMPLETED`(결과 확정 후 불변)·`DRAFT`(미발행)** → 409.
+
+> **CANCELLED 세션 수락(계획서 §5.2, O-M2C-1 확정 — v0.1.2 개정)**: 취소된 세션의 트랙도 **업로드 수락**한다 — "뛰던 참가자 트랙은 개인 기록(세션 무관 주행)으로 보존, 뛴 노력이 증발하지 않게". 단 **순위·PB 산정 트리거 없음**(CANCELLED은 RaceResult 미생성). `session_id`는 물리적으로 유지(FK 무결성)하되 결과·순위·PB **집계에서 제외**("세션 무관"은 논리 의미). FinishPolicy는 정상 수행(코스 존재) → 개인 기록의 완주여부·거리 유효, 히스토리(history-api §1) "취소된 세션" 배지로 노출·승격 소스 가능(FINISHED면).
 
 **권한/상태 평가 순서(W46-2/R-007 — 3자 대조 기준)**: ① 세션 없음 → `404 NOT_FOUND` → ② 호출자가 세션 소유 크루의 ACTIVE 멤버 아님 → **`403 FORBIDDEN`**(비멤버에게 세션 존재·상태 누설 금지 — Crew invite-only 규범) → ③ 크루 멤버지만 participation 부재(미등록) 또는 세션 상태 부적합 → **`409 SESSION_STATE_INVALID`** → ④ 이미 업로드됨 → `409 TRACK_ALREADY_UPLOADED` → ⑤ payload 검증(400/413). **403과 409는 배타** — 같은 호출자에 동시 부여 없음.
 
@@ -105,7 +108,7 @@
 - `400 VALIDATION_ERROR` — 필수 필드 누락·client_meta 미허용 키.
 - `403 FORBIDDEN` — **세션 소유 크루의 ACTIVE 멤버 아님**(비멤버·탈퇴멤버). 세션 상태·존재 누설 금지.
 - `404 NOT_FOUND` — 세션 없음.
-- `409 SESSION_STATE_INVALID` — **크루 멤버지만** participation 부재(선 register 필요) 또는 세션이 OPEN/RUNNING/FINALIZING 아님(COMPLETED/CANCELLED/DRAFT).
+- `409 SESSION_STATE_INVALID` — **크루 멤버지만** participation 부재(선 register 필요) 또는 세션이 `COMPLETED`(확정 후 불변)·`DRAFT`(미발행). **CANCELLED은 수락**(개인 기록 보존).
 - `409 TRACK_ALREADY_UPLOADED` — 다른 `client_upload_id`로 이미 업로드된 participation(§4 불변).
 - `413 TRACK_TOO_LARGE` — 크기 상한 초과(TK-3).
 
@@ -125,7 +128,7 @@
 
 ## 3. GET /api/v1/sessions/{sessionId}/result — 결과·순위 조회
 
-세션 결과 확정(`race_result` 존재, 세션 COMPLETED) 후 순위표. **미확정 세션은 `409 RESULT_NOT_READY`**(클라는 결과 대기 화면 유지). 크루 멤버 조회 가능.
+세션 결과 확정(`race_result` 존재, 세션 COMPLETED) 후 순위표. **미확정 세션은 `409 RESULT_NOT_READY`**(클라는 결과 대기 화면 유지). **CANCELLED 세션은 RaceResult를 생성하지 않음 → `404 NOT_FOUND`**(결과 자체 부재 — 대기가 아님. 개인 기록은 history-api §1로 조회). 크루 멤버 조회 가능.
 
 ### 응답 200
 ```json
@@ -158,7 +161,7 @@
 | entries[].is_pb | bool | **완주 기록만 PB 후보**(O-M2-5). DNF/DNS 항상 false |
 
 ### 오류
-- `403 FORBIDDEN` — 크루 비멤버. · `404 NOT_FOUND` — 세션 없음. · `409 RESULT_NOT_READY` — 결과 미확정(FINALIZING 이전 또는 확정 전).
+- `403 FORBIDDEN` — 크루 비멤버. · `404 NOT_FOUND` — 세션 없음 **또는 CANCELLED 세션**(결과 미생성 — 개인 기록은 history-api). · `409 RESULT_NOT_READY` — 결과 미확정(FINALIZING 이전 또는 확정 전).
 
 ---
 
