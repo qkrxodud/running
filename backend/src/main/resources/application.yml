@@ -1,0 +1,58 @@
+spring:
+  application:
+    name: running-crew-backend
+
+  # 기본(로컬) 프로필: MySQL localhost. Docker Compose는 SPRING_DATASOURCE_URL 환경변수로 오버라이드.
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/runningcrew?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&characterEncoding=UTF-8}
+    username: ${SPRING_DATASOURCE_USERNAME:runningcrew}
+    password: ${SPRING_DATASOURCE_PASSWORD:runningcrew}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      # 스키마 진실은 Flyway(V1__init.sql). Hibernate는 스키마를 생성/변경하지 않는다.
+      # validate가 아니라 none인 이유: Instant↔TIMESTAMP(6) 매핑의 방언별 타입명 검증이
+      # 라이브 MySQL 대조 없이 취약해 무인 재기동(restart:unless-stopped)을 깨뜨릴 수 있어,
+      # 배치 B에서 실제 MySQL로 검증 후 validate로 승격한다.
+      ddl-auto: none
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC   # MySQL 세션 타임존 UTC 고정(저장·비교·판정 전부 UTC)
+        format_sql: false
+
+  flyway:
+    enabled: true
+    baseline-on-migrate: false
+    locations: classpath:db/migration
+
+  # 시각/직렬화 규약(계약 conventions.md §2·§3)
+  jackson:
+    property-naming-strategy: SNAKE_CASE      # JSON 필드 snake_case
+    default-property-inclusion: non_null
+    time-zone: UTC
+    serialization:
+      write-dates-as-timestamps: false        # Instant → ISO-8601(Z) 문자열
+
+# actuator health 노출
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# 구조화 로그 기본(운영 스킬: JSON 로그). 로컬 가독성을 위해 기본은 콘솔, 운영 프로필에서 JSON 인코더 배선 예정.
+logging:
+  level:
+    root: INFO
+    com.runningcrew: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd'T'HH:mm:ss.SSS'Z'} %-5level [%thread] %logger{36} - %msg%n"
+
+server:
+  port: 8080

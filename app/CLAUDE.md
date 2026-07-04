@@ -6,9 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project state
 
-This is the **Flutter mobile client** (`running/app`) for a running app. It sits alongside a sibling `running/backend` directory (currently empty). The Dart code is still the default Flutter counter scaffold in `lib/main.dart` — no domain features have been built yet. Treat `main.dart` as a starting point to replace, not an example to imitate.
-
-The Dart SDK constraint is `^3.11.5`. There are no third-party dependencies beyond `cupertino_icons`; state is managed with plain `setState` and there is no routing, networking, or persistence layer yet.
+This is the **Flutter mobile client** (`running/app`) for the running crew replay app. The backend (Spring Boot 3.5+/Java 25, hexagonal) lives at `../backend`. Current state (2026-07-04): M1 tracking spike implemented (`lib/spike/`, Foreground Service without ACCESS_BACKGROUND_LOCATION), platform isolation interfaces in place (`lib/platform/{location,notification,permission}/` — Android impls keep geolocator/flutter_foreground_task imports inside), pure-Dart core in `lib/core/` (polyline codec, sampling/buffer policies, backoff upload queue — guarded by an allowlist import test), router-based scaffold (go_router + Riverpod + dio). Real HTTP wiring and feature screens are batch B.
 
 ## Commands
 

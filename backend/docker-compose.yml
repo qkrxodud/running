@@ -1,0 +1,53 @@
+# 러닝크루 로컬/홈서버 인프라 — Spring Boot + MySQL 8.
+# restart: unless-stopped (정전 복구 무인 재기동 전제, backend-hexagonal 스킬).
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: runningcrew-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: runningcrew
+      MYSQL_USER: runningcrew
+      MYSQL_PASSWORD: runningcrew
+      MYSQL_ROOT_PASSWORD: root
+      TZ: UTC
+    command:
+      - --default-time-zone=+00:00       # MySQL 서버 타임존 UTC 고정
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: runningcrew-app
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/runningcrew?connectionTimeZone=UTC&forceConnectionTimeZoneToSession=true&characterEncoding=UTF-8
+      SPRING_DATASOURCE_USERNAME: runningcrew
+      SPRING_DATASOURCE_PASSWORD: runningcrew
+      TZ: UTC
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8080/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+volumes:
+  mysql-data:

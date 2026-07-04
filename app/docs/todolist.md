@@ -51,12 +51,12 @@
 - [ ] **판정**: 유실이 심하면 이 시점에 유료 패키지(`flutter_background_geolocation`) 전환 결정 (fail fast)
 
 ### 클라이언트 아키텍처 확정 (스파이크 통과 후)
-- [ ] `LocationTracker` 인터페이스 정의 (start/stop/pause, 포인트 스트림, 상태) — iOS 확장 대비 격리 지점 ①
-- [ ] `NotificationService` 인터페이스 정의 (포그라운드 서비스 알림 vs iOS 로컬 알림) — 격리 지점 ②
-- [ ] `PermissionService` 인터페이스 정의 (위치·알림 권한 요청 플로우 OS별 분기) — 격리 지점 ③
-- [ ] 플랫폼 무관 코어를 순수 Dart로 설계: 트래킹 버퍼링 / 로컬 저장 / 업로드 재시도(지수 백오프) / 폴리라인 인코딩
-- [ ] Android 전용 패키지는 트래커 구현체 내부로만 한정하는 규칙 확립
-- [ ] 기본 스캐폴드 정리: `main.dart` 교체, `test/widget_test.dart` 갱신, 라우팅·상태관리·네트워킹 구조 선정
+- [x] `LocationTracker` 인터페이스 정의 (start/stop/pause/resume, 포인트 스트림, 상태) — 격리 지점 ① (2026-07-04, `lib/platform/location/`)
+- [x] `NotificationService` 인터페이스 정의 — 격리 지점 ② (2026-07-04)
+- [x] `PermissionService` 인터페이스 정의 — 격리 지점 ③ (2026-07-04)
+- [x] 플랫폼 무관 코어를 순수 Dart로 설계: 버퍼링·로컬 저장·백오프 재시도 큐·폴리라인 인코딩 (2026-07-04, `lib/core/` — HTTP 실전송 배선은 배치 B)
+- [x] Android 전용 패키지는 트래커 구현체 내부로만 한정하는 규칙 확립 (allowlist 가드 테스트 `test/core/no_platform_imports_test.dart`, R-002)
+- [x] 기본 스캐폴드 정리: `main.dart` 라우터 기반 재구성, go_router + Riverpod + dio 선정 (2026-07-04)
 
 ### 화면 뼈대 (사용자 흐름 7단계가 끊기지 않도록)
 - [ ] 홈 화면 — 로그인 후 착지, 내 크루·예정 레이스
@@ -71,13 +71,13 @@
 - [ ] 세션 상세 화면: 일시·코스·참가자·보상·"지금 뛰는 중" 표시, '레이스 시작' 진입점
 
 ### 백엔드 뼈대
-- [ ] Spring Boot 3.5+ + Java 25 프로젝트 생성 (`running/backend`)
-- [ ] 헥사고날 구조 + 컨텍스트별 패키지 분리 (user / crew / race / tracking / ranking / reward / replay)
-- [ ] Docker Compose 구성 (Spring Boot + MySQL), 컨테이너 restart 정책 설정
-- [ ] MySQL 스키마 마이그레이션 도구 도입 (Flyway 등)
-- [ ] 계획서 §7 데이터 모델 기반 초기 마이그레이션 작성 — 도메인 항목에 안 걸리는 컬럼 누락 주의 (`device_token.platform`, `user.withdrawn_at`, `reward_grant.sent_at` 등)
-- [ ] REST API 계약 문서 — 조회 API 세트 포함: 내 크루 목록, 크루 상세, 세션 목록/상세(참가자 상태), 결과/순위, 개인 히스토리·PB
-- [ ] 시간대 규약 확정: 서버 저장 UTC / 표시 KST — scheduled_at·upload_deadline·리마인더 발송·마감 판정이 전부 시간에 걸려 있음
+- [x] Spring Boot 3.5+ + Java 25 프로젝트 생성 (`running/backend`) (2026-07-04, Gradle 9.1 + foojay 툴체인)
+- [x] 헥사고날 구조 + 컨텍스트별 패키지 분리 (user / crew / race / tracking / ranking / reward / replay + common) (2026-07-04)
+- [x] Docker Compose 구성 (Spring Boot + MySQL 8, restart: unless-stopped, healthcheck) (2026-07-04)
+- [x] MySQL 스키마 마이그레이션 도구 도입 — Flyway + Testcontainers 라이브 마이그레이션 테스트 (R-003 박제) (2026-07-04)
+- [x] 계획서 §7 데이터 모델 기반 초기 마이그레이션 작성 — `V1__init.sql` 17테이블, `rank` 백틱(R-003) (2026-07-04)
+- [x] REST API 계약 문서 v0.1 — conventions/app-version/crew/session (`docs/contracts/`). 명령 상세·나머지 조회(결과/순위, 히스토리·PB)는 배치 B에서 확장 (2026-07-04)
+- [x] 시간대 규약 확정: JVM·MySQL 세션·jackson 3중 UTC 고정, 표시 KST는 클라 소관 (2026-07-04)
 
 ### 인증 + User 컨텍스트
 - [ ] 카카오 로그인 연동 (`kakao_flutter_sdk` — 키 해시는 M0에서 등록 완료 전제, 재작업 아님)
@@ -120,7 +120,8 @@
 - [ ] CI 구성 (GitHub Actions 수준 — 빌드 + 테스트 자동 실행. 골든 테스트가 "회귀 방지선"이 되려면 자동 실행이 필수)
 
 ### 운영 최소 장치
-- [ ] `GET /app-version` 최소 지원 버전 API (`app_min_version` 테이블) + 클라이언트 강제 업데이트 판단 로직
+- [x] `GET /app-version` 최소 지원 버전 API (`app_min_version` 테이블) — 서버 구현 + 계약 일치 라이브 검증 완료 (2026-07-04)
+- [ ] 클라이언트 강제 업데이트 판단 로직 (앱 시작 시 호출 — 배치 B, dio 배선과 함께)
 
 ---
 

@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'spike/spike_screen.dart';
+import 'app/app_theme.dart';
+import 'app/router.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  // 서비스 isolate ↔ UI 통신 포트 초기화 (flutter_foreground_task)
+  // 서비스 isolate ↔ UI 통신 포트 초기화 (flutter_foreground_task).
+  // 트래커/스파이크의 sendDataToMain 수신 전제 — 앱 부트스트랩(composition root)에서 1회.
   FlutterForegroundTask.initCommunicationPort();
-  runApp(const RunningCrewApp());
+  runApp(const ProviderScope(child: RunningCrewApp()));
 }
 
 class RunningCrewApp extends StatelessWidget {
@@ -15,13 +18,12 @@ class RunningCrewApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: '러닝크루',
-      theme: ThemeData(
-        // 1a 라임 디자인 토큰의 시드만 우선 반영 — 본 화면 작업은 스파이크 통과 후
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFC7F94E)),
-      ),
-      home: const SpikeScreen(),
+      theme: AppTheme.light(),
+      routerConfig: _router,
     );
   }
 }
+
+final _router = createRouter();
