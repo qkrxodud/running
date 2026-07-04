@@ -3,21 +3,17 @@ package com.runningcrew.user.adapter.out.kakao;
 import com.runningcrew.user.application.port.out.KakaoTokenInvalidException;
 import com.runningcrew.user.application.port.out.KakaoTokenVerifier;
 import com.runningcrew.user.domain.KakaoAccount;
-import org.springframework.context.annotation.Profile;
-import org.springframework.stereotype.Component;
 
 /**
  * 카카오 토큰 검증 스텁(계약 auth-api.md §4) — <b>local/dev/sandbox 프로필 전용</b>.
  *
  * <p>{@code stub:{fake_kakao_id}} 형식만 수용 → 해당 KakaoAccount 반환(같은 fake id = 같은 User).
- * 그 외 전부 검증 실패. prod/프로필 미지정에서는 이 빈이 없어 {@code KakaoTokenVerifier} 주입 실패로
- * 부팅이 깨진다(fail-fast) — 스텁이 운영에 새는 사고를 구조로 차단한다.
+ * 그 외 전부 검증 실패.
  *
- * <p>실 카카오 어댑터 배선 지점: 같은 out 패키지에 {@code @Profile("prod")} 어댑터 추가(M0 앱 키 확보 후).
- * 그때 이 파일과 §4 계약절만 제거되고 §1~§3(포트 계약)은 무변경.
+ * <p><b>배선</b>: 더 이상 독립 {@code @Component}가 아니다. {@link KakaoVerifierConfig}가 local/dev/sandbox에서
+ * {@link DelegatingKakaoTokenVerifier} 내부에 이 스텁을 감싸 넣는다({@code stub:} 접두 → 스텁, 그 외 → 실 kapi).
+ * prod에는 Real만 주입되어 스텁이 존재하지 않는다 — 스텁의 운영 유출은 프로필 배선으로 구조 차단.
  */
-@Component
-@Profile({"local", "dev", "sandbox"})
 public class StubKakaoTokenVerifier implements KakaoTokenVerifier {
 
     private static final String PREFIX = "stub:";

@@ -68,4 +68,9 @@ class AppConfig {
   /// 지도 실 SDK 사용 가능 여부(Client ID 확보 시 true). 현재는 항상 false →
   /// placeholder 렌더. 교체 시 이 게이트가 어댑터 선택을 가른다.
   static bool get naverMapReady => naverMapClientId.isNotEmpty;
+
+  /// 카카오 로그인 사용 가능 여부(네이티브 앱 키 주입 시 true). 로그인 화면은 이
+  /// 게이트로 카카오 버튼 활성/비활성을 가른다 — 키 없는 빌드는 "준비 중"으로 둔다.
+  /// (naverMapReady 와 동일한 "키 존재" 규칙 — env 비교 아님.)
+  static bool get kakaoLoginReady => kakaoAppKey.isNotEmpty;
 }

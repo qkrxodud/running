@@ -37,6 +37,19 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- 카카오 OAuth 리다이렉트 (kakao_flutter_sdk 표준) — scheme kakao{네이티브앱키}.
+             카카오계정(웹) 로그인이 CustomTabs 로 열릴 때 인증 코드가 이 액티비티로 콜백된다. -->
+        <activity
+            android:name="com.kakao.sdk.flutter.AuthCodeCustomTabsActivity"
+            android:exported="true">
+            <intent-filter android:label="flutter_web_auth">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="kakao0cf9d58a088406435bcafe4313e9a7a2"
+                    android:host="oauth" />
+            </intent-filter>
+        </activity>
         <!-- 트래킹 Foreground Service (flutter_foreground_task) -->
         <service
             android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
@@ -58,5 +71,7 @@
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
+        <!-- 카카오톡 설치 여부 조회·톡 로그인 실행 (Android 11+ 패키지 가시성). -->
+        <package android:name="com.kakao.talk" />
     </queries>
 </manifest>

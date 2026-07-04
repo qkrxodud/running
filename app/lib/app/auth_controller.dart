@@ -54,11 +54,20 @@ class AuthController extends Notifier<AuthState> {
     }
   }
 
-  /// 스텁 로그인: `stub:{fake_kakao_id}` (auth-api.md §4).
-  /// 카카오 SDK 로그인은 M0 앱 키 확보 후 이 메서드 옆에 추가 배선(화면 교체 지점).
-  Future<void> loginWithStub(String fakeKakaoId) async {
-    await _auth.login('stub:$fakeKakaoId');
-    // 토큰은 repository 가 저장. 온보딩 게이트는 서버 컬럼이 진실 — me() 로 확정.
+  /// 스텁 로그인: `stub:{fake_kakao_id}` (auth-api.md §4). dev·sandbox 전용.
+  Future<void> loginWithStub(String fakeKakaoId) =>
+      _completeLogin('stub:$fakeKakaoId');
+
+  /// 카카오 SDK access token 으로 로그인. 서버 경로는 스텁과 **동일** —
+  /// `POST /auth/login` 의 `kakao_access_token` 에 그대로 전달(auth-api.md §1).
+  /// 서버 스텁/실검증 분기는 서버측 verifier 소관이라 클라는 분기하지 않는다.
+  Future<void> loginWithKakao(String kakaoAccessToken) =>
+      _completeLogin(kakaoAccessToken);
+
+  /// 로그인 공통 마무리: 토큰 발급→저장(repository)→프로필 확정→상태 전이.
+  /// 온보딩 게이트는 서버 컬럼이 진실 — me() 로 확정한다.
+  Future<void> _completeLogin(String kakaoAccessToken) async {
+    await _auth.login(kakaoAccessToken);
     final profile = await _users.me();
     state = AuthState(status: _statusFor(profile), profile: profile);
   }

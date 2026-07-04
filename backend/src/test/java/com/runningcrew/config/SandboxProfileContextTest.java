@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.runningcrew.race.application.DevCourseSeeder;
 import com.runningcrew.support.AbstractMySqlIntegrationTest;
-import com.runningcrew.user.adapter.out.kakao.StubKakaoTokenVerifier;
+import com.runningcrew.user.adapter.out.kakao.DelegatingKakaoTokenVerifier;
 import com.runningcrew.user.application.port.out.KakaoTokenVerifier;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,9 +18,9 @@ import org.springframework.test.context.DynamicPropertySource;
  *
  * <p>실 MySQL 8(Testcontainers, 부모 싱글턴 컨테이너 재사용) 위에서 {@code sandbox} 프로필로 부팅해:
  * <ul>
- *   <li>스텁 카카오 검증기가 활성(sandbox = 크루원 테스트용 스텁 로그인 ON)임을,
+ *   <li>위임 카카오 검증기(스텁·실 공존)가 활성(sandbox = 크루원 테스트용 스텁 로그인 ON + 실 kapi 병행)임을,
  *   <li>DevCourseSeeder가 활성(sandbox = 시더 ON)임을,
- *   <li>prod의 "스텁 빈 부재 fail-fast"가 sandbox에서 오작동하지 않음(빈이 정상 주입됨)을 확인한다.
+ *   <li>KakaoTokenVerifier 포트가 정상 주입됨(빈 부재 fail-fast 오작동 없음)을 확인한다.
  * </ul>
  * JWT_SECRET은 sandbox에 기본값이 없으므로 테스트가 명시 주입한다(주입하면 부팅 성공).
  */
@@ -37,9 +37,10 @@ class SandboxProfileContextTest extends AbstractMySqlIntegrationTest {
     ApplicationContext context;
 
     @Test
-    void 스텁_카카오_검증기가_sandbox에서_활성이다() {
+    void 위임_카카오_검증기가_sandbox에서_활성이다() {
+        // sandbox = 스텁·실 공존 라우터(DelegatingKakaoTokenVerifier). stub: 접두는 스텁, 그 외는 실 kapi로 위임.
         assertThat(context.getBean(KakaoTokenVerifier.class))
-                .isInstanceOf(StubKakaoTokenVerifier.class);
+                .isInstanceOf(DelegatingKakaoTokenVerifier.class);
     }
 
     @Test

@@ -70,6 +70,13 @@ jwt:
   access-ttl-seconds: 1800
   refresh-ttl-seconds: 2592000
 
+# 카카오 토큰 검증(RealKakaoTokenVerifier). GET {base-url}/v2/user/me 를 사용자 액세스 토큰(Bearer)으로 호출.
+# 앱 키 불필요(user/me는 사용자 토큰만으로 호출) — base-url·타임아웃만 외부화. kapi 지연이 로그인 TX를 오래 붙잡지 않게 응답 5s.
+kakao:
+  base-url: ${KAKAO_API_BASE_URL:https://kapi.kakao.com}
+  connect-timeout: ${KAKAO_CONNECT_TIMEOUT:3s}
+  read-timeout: ${KAKAO_READ_TIMEOUT:5s}
+
 ---
 # local 프로필(dev 환경) — 로컬 개발 편의 기본값. 스텁 카카오 검증기·DevCourseSeeder(@Profile local/dev/sandbox)와 세트.
 # prod/프로필 미지정에서는 스텁 빈이 없어 부팅 실패(fail-fast) — 스텁의 운영 유출을 구조로 차단.
@@ -91,8 +98,9 @@ spring:
 # jwt.secret 미정의 — env JWT_SECRET을 반드시 주입해야 부팅됨(default 없음).
 
 ---
-# prod 프로필 — 운영. 스텁·시더 미주입(빈 부재 fail-fast로 유출 차단), JWT_SECRET env 필수(기본값 없음).
-# 실 카카오 어댑터(@Profile prod) 배선 전까지 KakaoTokenVerifier 빈 부재로 의도적 부팅 실패.
+# prod 프로필 — 운영. 스텁·시더 미주입(스텁 빈 부재로 유출 차단), JWT_SECRET env 필수(기본값 없음).
+# RealKakaoTokenVerifier(@Profile prod, KakaoVerifierConfig)가 KakaoTokenVerifier 포트를 채운다 → prod 부팅 가능.
+# (앱 키 불필요 — user/me는 사용자 토큰만으로 호출. kakao.base-url·타임아웃은 베이스 기본값 상속, env로 오버라이드 가능.)
 spring:
   config:
     activate:

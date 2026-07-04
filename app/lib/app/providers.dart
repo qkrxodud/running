@@ -11,11 +11,23 @@ import '../data/crew_repository.dart';
 import '../data/session_repository.dart';
 import '../data/token_store.dart';
 import '../data/user_repository.dart';
+import '../platform/auth/kakao_auth_service.dart';
+import 'app_config.dart';
 import 'auth_controller.dart';
 
 /// composition root — 테스트는 이 프로바이더들을 override 해 페이크 주입.
 
 final tokenStoreProvider = Provider<TokenStore>((ref) => SecureTokenStore());
+
+/// 카카오 로그인 경계(플랫폼 격리) — 테스트는 페이크로 override.
+final kakaoAuthServiceProvider =
+    Provider<KakaoAuthService>((ref) => const KakaoSdkAuthService());
+
+/// 카카오 로그인 버튼 활성 여부. 기본은 [AppConfig] 게이트(키 존재)지만, 컴파일
+/// 타임 상수라 위젯 테스트에서 활성 경로를 검증하려면 이 provider 를 override 한다
+/// (env_gate 와 같은 테스트 가능화 취지 — 게이트 판단을 주입 지점으로 분리).
+final kakaoLoginReadyProvider =
+    Provider<bool>((ref) => AppConfig.kakaoLoginReady);
 
 final dioProvider = Provider<Dio>((ref) {
   final tokenStore = ref.watch(tokenStoreProvider);
