@@ -1,0 +1,7 @@
+{
+  "APP_ENV": "prod",
+  "API_BASE_URL": "https://api.example.com",
+  "DEV_LOGIN": "false",
+  "KAKAO_APP_KEY": "",
+  "NAVER_MAP_CLIENT_ID": ""
+}

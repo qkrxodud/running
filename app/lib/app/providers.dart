@@ -6,7 +6,9 @@ import '../core/version/force_update_policy.dart';
 import '../data/api_client.dart';
 import '../data/app_version_repository.dart';
 import '../data/auth_repository.dart';
+import '../data/course_repository.dart';
 import '../data/crew_repository.dart';
+import '../data/session_repository.dart';
 import '../data/token_store.dart';
 import '../data/user_repository.dart';
 import 'auth_controller.dart';
@@ -42,6 +44,14 @@ final userRepositoryProvider = Provider<UserRepository>(
 
 final crewRepositoryProvider = Provider<CrewRepository>(
   (ref) => HttpCrewRepository(dio: ref.watch(dioProvider)),
+);
+
+final courseRepositoryProvider = Provider<CourseRepository>(
+  (ref) => HttpCourseRepository(dio: ref.watch(dioProvider)),
+);
+
+final sessionRepositoryProvider = Provider<SessionRepository>(
+  (ref) => HttpSessionRepository(dio: ref.watch(dioProvider)),
 );
 
 final appVersionRepositoryProvider = Provider<AppVersionRepository>(

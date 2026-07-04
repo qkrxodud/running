@@ -68,7 +68,7 @@
 - [x] 최초 로그인 닉네임 설정 온보딩 (onboarded_at 기준 게이트) (2026-07-04 B1)
 - [x] 설정/프로필 화면: 닉네임 수정, 로그아웃 — 방침·약관 링크는 URL 확보 후 연결(placeholder) (2026-07-04 B1)
 - [x] **앱 내 회원 탈퇴 UI** — 2단 확인 + "재로그인 시 신규 계정, 복구 불가" 고지 (2026-07-04 B1)
-- [ ] 세션 상세 화면: 일시·코스·참가자·보상·"지금 뛰는 중" 표시, '레이스 시작' 진입점
+- [x] 세션 상세 화면: 일시·코스 미리보기·참가자 상태·보상·"지금 뛰는 중" 표시, '레이스 시작' 진입점 + 세션 목록 화면 (2026-07-04 B2)
 
 ### 백엔드 뼈대
 - [x] Spring Boot 3.5+ + Java 25 프로젝트 생성 (`running/backend`) (2026-07-04, Gradle 9.1 + foojay 툴체인)
@@ -100,24 +100,24 @@
   - [x] 합류 "알림" 처리 방식 결정 — **인앱 표시로 갈음 확정** (O-1, 사용자 결정 2026-07-04. RewardGranted 동일)
 
 ### Course + RaceSession (Race 컨텍스트)
-- [ ] Course 애그리거트: 경로 폴리라인(RoutePath), 총 거리, 출발/도착 지점, 생성자
-- [ ] `flutter_naver_map` SDK 연동 (Client ID 설정, 지도 기본 화면)
-- [ ] 코스 등록 ① 지도에서 경로 그리기 (네이버 지도 SDK) — 승격 방식(②)은 TrackRecord가 생기는 M2로 이동
-- [ ] 불변식: **발행(OPEN 이후 상태의 세션에서 사용)된 코스는 불변** — RUNNING/COMPLETED 포함, 수정 필요 시 새 코스 생성
-- [ ] RaceSession 애그리거트: 코스, 예정 일시, 상태, 업로드 마감 시각
-  - [ ] 상태머신: DRAFT → OPEN → RUNNING → FINALIZING → COMPLETED / CANCELLED
-  - [ ] `upload_deadline` NOT NULL — "예정 +12시간" 기본값은 앱 레이어 UX 기본값으로 구현 (도메인 규칙 아님)
-- [ ] 세션 생성 UI: 코스, 일시, 참가자, 보상 내용(텍스트) 지정
-- [ ] Participation: REGISTERED / STARTED / FINISHED / DNF / DNS / WITHDRAWN
-- [ ] 취소 정책: 크루장은 RUNNING 중에도 취소 가능 — CANCELLED 시 순위·보상 미생성, 뛰던 참가자 트랙은 **개인 기록(세션 무관 주행)으로 보존**
-- [ ] '레이스 시작' 시 서버에 STARTED 신호 1회 전송 (서버 다운 시 생략 가능, 기록에 영향 없음) + "지금 뛰는 중" 표시
+- [x] Course 애그리거트: RoutePath(1e5 폴리라인, 서버 거리 확정), 출발/도착, 생성자(크루장 전용) — **불변 애그리거트로 격상**(수정 API 미노출) (2026-07-04 B2)
+- [ ] `flutter_naver_map` SDK 연동 (**Client ID 대기** — CoursePolylineMap 인터페이스 + placeholder 구현 완료, 어댑터 1개만 추가하면 되는 구조) (구조 2026-07-04 B2)
+- [ ] 코스 등록 ① 지도에서 경로 그리기 (**Client ID 대기** — dev 시드 코스 + 코스 선택 목록으로 우회 중) — 승격 방식(②)은 M2
+- [x] 불변식: 발행된 코스는 불변 — 구조적 보장(수정 API 부재) + OPEN 발행 잠금 (2026-07-04 B2)
+- [x] RaceSession 애그리거트 (2026-07-04 B2):
+  - [x] 상태머신: DRAFT → OPEN → RUNNING → FINALIZING → COMPLETED / CANCELLED — 24셀 매트릭스 골든 박제, OPEN은 명시 발행, RUNNING은 첫 STARTED 유발
+  - [x] `upload_deadline` NOT NULL — "+12시간"은 앱 레이어 UX 기본값으로 구현
+- [x] 세션 생성 UI: 코스 선택(시드)·일시·보상 텍스트·마감 (2026-07-04 B2)
+- [x] Participation: REGISTERED/STARTED/DNS/WITHDRAWN 구현 + enum 6값 집합 보존 (FINISHED/DNF 전이는 M2 업로드 파이프라인) (2026-07-04 B2)
+- [x] 취소 정책: DRAFT/OPEN/RUNNING → CANCELLED, 순위·보상 미생성 (뛰던 트랙 개인 기록 보존은 M2 트랙 구현 시) (2026-07-04 B2)
+- [x] '레이스 시작' STARTED 신호 1회 + "지금 뛰는 중" 표시 (트래킹 배선은 M2 — W26-1 정본: 활성 버튼) (2026-07-04 B2)
 
 ### 개발 환경 / 품질 기반
-- [ ] dev/prod 환경 분리 (Flutter flavor 또는 dart-define): API base URL, 카카오 앱 키, Firebase 설정, 지도 Client ID — 운영 DB에 개발 트래픽 오염 방지 (M4가 "실전 운영"이므로)
+- [x] dev/prod 환경 분리 (dart-define, `config/{dev,prod}.json`): API base URL + 카카오 키·지도 Client ID 주입 자리, `/spike`·dev 로그인 prod 차단 (2026-07-04 B2)
 - [ ] release 빌드 서명 연결 (`signingConfig`) + R8/ProGuard keep 규칙(카카오·네이버지도 SDK) + AAB 릴리즈 빌드 실검증 — M4 직전에 처음 하면 반드시 사고
 - [ ] Crashlytics SDK 앱 통합 (`firebase_crashlytics` 초기화, 비치명 오류 로깅) — M0은 콘솔 생성, M4는 확인 루틴뿐이라 구현 단계가 여기
 - [ ] versionCode/versionName 증가 규칙 (`app_min_version` 강제 업데이트 체계의 전제)
-- [ ] CI 구성 (GitHub Actions 수준 — 빌드 + 테스트 자동 실행. 골든 테스트가 "회귀 방지선"이 되려면 자동 실행이 필수)
+- [x] CI 구성 (GitHub Actions `.github/workflows/ci.yml`): flutter analyze+test / backend gradle build(Testcontainers) 2잡, main push·PR 트리거 (2026-07-04 B2)
 
 ### 운영 최소 장치
 - [x] `GET /app-version` 최소 지원 버전 API (`app_min_version` 테이블) — 서버 구현 + 계약 일치 라이브 검증 완료 (2026-07-04)

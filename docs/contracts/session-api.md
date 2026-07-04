@@ -1,16 +1,25 @@
 # session-api 계약
 
-> **v0.1 · 2026-07-04 · 계약 우선 초안(contract-first)** — 서버 구현이 아직 없어도 이 shape가 진실이다. 명령(세션 생성)은 계약만 확정, 구현은 배치 B.
-> 근거: planner A-B5, `domain-model` 스킬 Race 컨텍스트. 공통 규약은 `conventions.md`.
+> **v0.2 · 2026-07-04 · 명령 확정** — 서버 구현(B2-S2/S3)·앱 소비(B2-C1/C2)는 이 문서 기준(3자 대조의 진실).
+> 근거: `22_analyst_design_B2.md` §2·§3(RaceSession 상태머신·Participation), planner A-B5, `domain-model` 스킬 Race 컨텍스트, `V1__init.sql`. 공통 규약은 `conventions.md`.
+>
+> **변경 이력**
+> - v0.2 (2026-07-04, domain-analyst): 배치 B2 — 조회 세트(생성/목록/상세) shape 확정 유지 + 명령 append(§4 open·§5 register·§6 start·§7 cancel). 상태 전이 매트릭스·오류코드 전수. 세션 생성에 `upload_deadline > scheduled_at` 검증 추가. OPEN 발행=별도 open 명령(생성 즉시 DRAFT), RUNNING 진입=첫 STARTED 신호. 응답 shape 변경 없음(v0.1 호환).
+> - v0.1 (2026-07-04, domain-analyst): 계약 우선 초안(조회 세트만).
 
 모든 엔드포인트 `auth: required`.
 
-## Enum 값 집합 (반드시 명시 — 회귀 R-001 방지)
+## Enum 값 집합 (반드시 명시 — 회귀 R-001 방지, 클라 미지값 크래시 금지·unknown 폴백)
 
 - `race_session.status` (**RaceStatus**): {`DRAFT`, `OPEN`, `RUNNING`, `FINALIZING`, `COMPLETED`, `CANCELLED`}
-  - 전이: `DRAFT → OPEN → RUNNING → FINALIZING → COMPLETED | CANCELLED`. COMPLETED는 전원 업로드 완료 또는 `upload_deadline` 경과 시에만. 크루장은 RUNNING 중에도 CANCELLED 가능.
+  - 전이: `DRAFT →(open) OPEN →(첫 STARTED) RUNNING →(M2) FINALIZING →(M2) COMPLETED`. `DRAFT|OPEN|RUNNING →(cancel) CANCELLED`. COMPLETED는 전원 업로드 완료 또는 `upload_deadline` 경과 시에만(M2). 크루장은 RUNNING 중에도 CANCELLED 가능. **B2 구현 전이**: 생성(→DRAFT)·open·start(→RUNNING)·cancel. FINALIZING/COMPLETED는 M2. 합법/불법 매트릭스는 §8.
 - `participation.status` (**Participation**): {`REGISTERED`, `STARTED`, `FINISHED`, `DNF`, `DNS`, `WITHDRAWN`}
   - 이는 **서버 상태**다. 클라이언트 로컬 상태머신(`READY/RUNNING/FINISHED_LOCAL/UPLOADED`)과 별개 — 계약·응답에 클라 상태를 넣지 않는다.
+  - **B2 능동 전이**: `REGISTERED`(register)·`STARTED`(start). `WITHDRAWN`은 유저 탈퇴 시 행 보존 표시(nickname 익명화). `FINISHED`/`DNF`/`DNS`는 **M2**(업로드·FinishPolicy·마감 판정) — 값 집합엔 지금 포함(클라 폴백 대비).
+
+## 오류 코드 (본 API 전수)
+
+`VALIDATION_ERROR`(400) · `FORBIDDEN`(403) · `NOT_FOUND`(404) · `CREW_CLOSED`(409) · `SESSION_STATE_INVALID`(409)
 
 ---
 
@@ -30,14 +39,16 @@
 |---|---|---|---|
 | course_id | int64 | 필수 | 같은 크루 소유 코스 |
 | scheduled_at | datetime | 필수(NN) | UTC |
-| upload_deadline | datetime | 필수(NN) | UTC. **미규정 — 제안**: 클라/앱레이어가 `scheduled_at + 12h`를 기본 제시(도메인 하드코딩 금지, UX 기본값) |
+| upload_deadline | datetime | 필수(NN) | UTC. `upload_deadline > scheduled_at`(도메인 검증, 위반 시 400). **UX 기본값**: 클라/앱레이어가 `scheduled_at + 12h`를 기본 제시(도메인 하드코딩 금지) |
 
 ### 응답 201
-세션 상세(§3 SessionDetail). 생성 시 `status = DRAFT`.
+세션 상세(§3 SessionDetail). 생성 시 `status = DRAFT`(발행 전 준비 상태 — OPEN은 별도 §4 open 명령).
 
 ### 오류
+- `400 VALIDATION_ERROR` — `upload_deadline ≤ scheduled_at`, 시각 누락.
 - `403 FORBIDDEN` — 크루장 아님.
 - `404 NOT_FOUND` — course/crew 없음.
+- `409 CREW_CLOSED` — CLOSED 크루.
 - `409 SESSION_STATE_INVALID` — 코스가 다른 크루 소속 등.
 
 ---
@@ -120,6 +131,78 @@
 
 ---
 
-## 배치 A 범위 밖 (여기 명시만, 계약 상세는 배치 B/이후)
+## 4. POST /api/v1/sessions/{sessionId}/open — 세션 발행 (DRAFT → OPEN)
 
-- 세션 참가(REGISTER), '레이스 시작' STARTED 신호, 트랙 업로드, 결과·순위 조회, 세션 취소는 **배치 A 계약 초안에서 제외**. 본 문서는 생성/목록/상세(조회 세트)만 확정한다. 추가 시 이 파일에 변경 이력 주석과 함께 append.
+**크루장 전용**. body 없음. DRAFT→OPEN 전이. OPEN 이후 **코스 참조 발행 잠금**(course-api 발행 후 불변) + **참가(register) 개방**.
+
+### 응답 200
+세션 상세(§3, `status = OPEN`).
+
+### 오류
+- `403 FORBIDDEN` — 크루장 아님.
+- `404 NOT_FOUND` — 세션 없음.
+- `409 SESSION_STATE_INVALID` — DRAFT 아님(이미 OPEN 이상 또는 종료).
+- `409 CREW_CLOSED` — CLOSED 크루.
+
+---
+
+## 5. POST /api/v1/sessions/{sessionId}/register — 참가 신청 (opt-in)
+
+**크루 ACTIVE 멤버 본인**. body 없음. 호출자를 `REGISTERED`로 등록(명시적 opt-in — DNS="신청 후 미출주" 의미론 성립). **OPEN 세션만**. **멱등** — 이미 REGISTERED/STARTED면 no-op 200.
+
+### 응답 200
+세션 상세(§3). 호출자 participation이 `participants`에 REGISTERED로 반영.
+
+### 오류
+- `403 FORBIDDEN` — 크루 비멤버.
+- `404 NOT_FOUND` — 세션 없음.
+- `409 SESSION_STATE_INVALID` — OPEN 아님(DRAFT엔 신청 불가, RUNNING 후 지참 차단).
+
+---
+
+## 6. POST /api/v1/sessions/{sessionId}/start — 시작 신호 (STARTED, 멱등)
+
+**참가자 본인**. body 없음. 호출자 participation을 `STARTED`로. **선 register 필요**(participation 부재 시 409). 세션 OPEN/RUNNING만. **멱등** — 이미 STARTED/FINISHED면 no-op 200. **최초 STARTED가 세션 OPEN→RUNNING 전이**.
+
+> 보조 신호 — "지금 뛰는 중" 표시·RUNNING 전이용. **서버 다운 시 유실 무해**(주행 진실은 M2 track_record.started_at). 클라 트래킹 실배선은 M2(D-1).
+
+### 응답 200
+세션 상세(§3). 호출자 STARTED, 최초면 세션 `status = RUNNING`.
+
+### 오류
+- `403 FORBIDDEN` — 참가자 아님(권한).
+- `404 NOT_FOUND` — 세션 없음.
+- `409 SESSION_STATE_INVALID` — participation 부재(선 register 필요) 또는 세션이 OPEN/RUNNING 아님.
+
+---
+
+## 7. POST /api/v1/sessions/{sessionId}/cancel — 세션 취소
+
+**크루장 전용**. body 없음. `DRAFT|OPEN|RUNNING → CANCELLED`(RUNNING 중에도 가능). **순위·보상 미생성**. participation 행 미변경(현 상태 보존 — 세션 CANCELLED이므로 무의미해지나 이력 보존). B2 시점 트랙 없음 → 뛰던 참가자 트랙 개인기록 보존은 M2 트랙 등장 시 유효.
+
+### 응답 200
+세션 상세(§3, `status = CANCELLED`).
+
+### 오류
+- `403 FORBIDDEN` — 크루장 아님.
+- `404 NOT_FOUND` — 세션 없음.
+- `409 SESSION_STATE_INVALID` — 이미 종료(COMPLETED/CANCELLED) 또는 FINALIZING(M2).
+
+---
+
+## 8. 상태 전이 매트릭스 (합법 ✅ / 불법 = 409 SESSION_STATE_INVALID)
+
+| 명령 \ status | DRAFT | OPEN | RUNNING | FINALIZING | COMPLETED | CANCELLED |
+|---|---|---|---|---|---|---|
+| open | ✅→OPEN | 409 | 409 | 409 | 409 | 409 |
+| register | 409 | ✅ | 409 | 409 | 409 | 409 |
+| start | 409 | ✅(첫→RUNNING) | ✅(멱등) | 409 | 409 | 409 |
+| cancel | ✅→CANCELLED | ✅→CANCELLED | ✅→CANCELLED | 409(M2) | 409 | 409 |
+
+- FINALIZING→COMPLETED·마감 스케줄러는 **M2**. B2는 종료 전 3상태(DRAFT/OPEN/RUNNING)까지.
+
+---
+
+## 범위 밖 (여기 명시만 — M2/이후)
+
+- 트랙 업로드, 결과·순위 조회, PB, 세션 마감 스케줄러(전원완료/deadline → FINISHED/DNF/DNS·COMPLETED), 리플레이 알림은 **M2**. 본 문서는 세션 CRUD + 참가/시작/취소 명령까지. 추가 시 변경 이력 주석과 함께 append.

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../app/app_theme.dart';
 import '../../app/providers.dart';
@@ -140,6 +141,10 @@ class _CrewDetailBodyState extends ConsumerState<_CrewDetailBody> {
         ),
         const SizedBox(height: 22),
 
+        // 레이스 세션 진입 (session-api §2) — 목록/생성은 세션 화면에서.
+        _RaceSessionsEntry(crewId: crew.id),
+        const SizedBox(height: 24),
+
         // 초대 코드 (크루장 전용, ACTIVE 크루만)
         if (_isLeader && !_isClosed) _inviteSection(),
 
@@ -249,6 +254,49 @@ class _CrewDetailBodyState extends ConsumerState<_CrewDetailBody> {
     if (hours >= 24) return '${(hours / 24).floor()}일 후';
     if (hours >= 1) return '$hours시간 후';
     return '${remaining.inMinutes}분 후';
+  }
+}
+
+/// 크루 상세 → 레이스 세션 목록 진입 카드.
+class _RaceSessionsEntry extends StatelessWidget {
+  const _RaceSessionsEntry({required this.crewId});
+
+  final int crewId;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.lime,
+      borderRadius: BorderRadius.circular(20),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => context.push('/crews/$crewId/sessions'),
+        child: Padding(
+          padding: const EdgeInsets.all(18),
+          child: Row(
+            children: [
+              const Icon(Icons.flag, color: AppColors.ink),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('레이스 세션',
+                        style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: AppColors.ink)),
+                    Text('예정된 레이스 보기 · 참가 신청',
+                        style: TextStyle(fontSize: 13, color: Color(0xFF3C4232))),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: AppColors.ink),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

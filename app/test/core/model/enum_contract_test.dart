@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:running/core/model/crew_dtos.dart';
 import 'package:running/core/model/enum_codec.dart';
+import 'package:running/core/model/race_dtos.dart';
 import 'package:running/core/model/user_dtos.dart';
 
 /// 계약 enum 값 집합 대조 (설계 12 §6.3 — R-001 재발 방지 의무 테스트).
@@ -28,6 +29,24 @@ void main() {
     test('crew_member.status = {ACTIVE, WITHDRAWN} (crew-api.md v0.2)', () {
       expect(CrewMemberStatus.wireValues.keys.toSet(), {'ACTIVE', 'WITHDRAWN'});
     });
+
+    // Race 컨텍스트 — 미구현 상태값(FINALIZING/COMPLETED/FINISHED/DNF/DNS)도
+    // 집합 전량 보존해야 한다(서버가 그 값을 보내도 unknown 아닌 정식 파싱).
+    test('race_session.status 6값 전수 (session-api.md v0.2)', () {
+      expect(RaceStatus.wireValues.keys.toSet(),
+          {'DRAFT', 'OPEN', 'RUNNING', 'FINALIZING', 'COMPLETED', 'CANCELLED'});
+    });
+
+    test('participation.status 6값 전수 (session-api.md v0.2)', () {
+      expect(ParticipationStatus.wireValues.keys.toSet(), {
+        'REGISTERED',
+        'STARTED',
+        'FINISHED',
+        'DNF',
+        'DNS',
+        'WITHDRAWN',
+      });
+    });
   });
 
   group('미지값 폴백 (R-001 방지 — 크래시 금지)', () {
@@ -40,6 +59,15 @@ void main() {
 
     test('null 도 unknown 으로 폴백한다', () {
       expect(CrewRole.parse(null), CrewRole.unknown);
+    });
+
+    test('Race enum 미지값·null 폴백', () {
+      expect(RaceStatus.parse('ARCHIVED'), RaceStatus.unknown);
+      expect(RaceStatus.parse(null), RaceStatus.unknown);
+      expect(ParticipationStatus.parse('LATE'), ParticipationStatus.unknown);
+      // 미구현이지만 계약 값은 unknown 아님(정식 파싱).
+      expect(ParticipationStatus.parse('DNS'), ParticipationStatus.dns);
+      expect(RaceStatus.parse('FINALIZING'), RaceStatus.finalizing);
     });
 
     test('미지값 수신 시 관측 훅으로 로깅한다', () {

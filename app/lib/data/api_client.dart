@@ -2,16 +2,14 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 
+import '../app/app_config.dart';
 import '../core/model/api_error.dart';
 import '../core/model/auth_dtos.dart';
 import 'token_store.dart';
 
-/// API base URL — dart-define 주입 (dev/prod 분리 골격).
-/// 예: flutter run --dart-define=API_BASE_URL=http://192.168.0.10:8080
-const String apiBaseUrl = String.fromEnvironment(
-  'API_BASE_URL',
-  defaultValue: 'http://10.0.2.2:8080', // Android 에뮬레이터 → 호스트 localhost
-);
+/// API base URL — dev/prod 분리(B2-C4)의 단일 창구 [AppConfig] 경유.
+/// 예: flutter run --dart-define-from-file=config/dev.json
+const String apiBaseUrl = AppConfig.apiBaseUrl;
 
 /// 인증 불요 경로 (auth-api.md 토큰 개요) — Authorization 미첨부·401 복구 미적용.
 const List<String> noAuthPaths = [

@@ -8,10 +8,14 @@ import '../features/crew/crew_home_screen.dart';
 import '../features/crew/crew_join_screen.dart';
 import '../features/onboarding/onboarding_screen.dart';
 import '../features/auth/login_screen.dart';
+import '../features/race/session_create_screen.dart';
+import '../features/race/session_detail_screen.dart';
+import '../features/race/session_list_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/splash/splash_screen.dart';
 import '../features/update/force_update_screen.dart';
 import '../spike/spike_screen.dart';
+import 'app_config.dart';
 import 'auth_controller.dart';
 import 'providers.dart';
 
@@ -46,11 +50,25 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (c, s) => const CrewCreateScreen(),
       ),
       GoRoute(path: '/crews/join', builder: (c, s) => const CrewJoinScreen()),
+      // 세션 정적 경로를 :crewId 앞 순서로(create 우선 매칭).
+      GoRoute(
+        path: '/crews/:crewId/sessions/create',
+        builder: (c, s) =>
+            SessionCreateScreen(crewId: _crewId(s.pathParameters)),
+      ),
+      GoRoute(
+        path: '/crews/:crewId/sessions',
+        builder: (c, s) => SessionListScreen(crewId: _crewId(s.pathParameters)),
+      ),
       GoRoute(
         path: '/crews/:crewId',
+        builder: (c, s) => CrewDetailScreen(crewId: _crewId(s.pathParameters)),
+      ),
+      GoRoute(
+        path: '/sessions/:sessionId',
         builder: (c, s) {
-          final id = int.tryParse(s.pathParameters['crewId'] ?? '') ?? -1;
-          return CrewDetailScreen(crewId: id);
+          final id = int.tryParse(s.pathParameters['sessionId'] ?? '') ?? -1;
+          return SessionDetailScreen(sessionId: id);
         },
       ),
       GoRoute(path: '/spike', builder: (c, s) => const SpikeScreen()),
@@ -58,9 +76,13 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
+int _crewId(Map<String, String> params) =>
+    int.tryParse(params['crewId'] ?? '') ?? -1;
+
 String? _redirect(GoRouterState state, Ref ref) {
   final loc = state.matchedLocation;
-  if (loc == '/spike') return null;
+  // /spike 는 dev 도구 — prod 빌드에서는 접근 차단(B2-C4 격리), dev 는 게이트 우회.
+  if (loc == '/spike') return AppConfig.showDevTools ? null : '/';
 
   final forceUpdate =
       ref.read(forceUpdateRequiredProvider).asData?.value ?? false;

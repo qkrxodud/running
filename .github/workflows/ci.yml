@@ -1,0 +1,77 @@
+name: CI
+
+# 러닝크루 앱 CI — 앱(Flutter)·서버(Spring Boot/JDK25) 양쪽을 push·PR(main)에서 검증한다.
+# 실패 시 머지 차단(브랜치 보호 규칙에서 두 job 을 필수 체크로 지정).
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# 같은 브랜치/PR 의 중복 실행은 최신 것만 남기고 취소.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  flutter:
+    name: Flutter (app)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+
+      # stable 채널 버전 고정(로컬 검증 버전과 동일 — 재현성).
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: 3.41.7
+          channel: stable
+          cache: true
+
+      - name: flutter pub get
+        run: flutter pub get
+
+      - name: flutter analyze
+        run: flutter analyze
+
+      - name: flutter test
+        run: flutter test
+
+  backend:
+    name: Backend (Spring Boot · JDK 25 · Testcontainers)
+    runs-on: ubuntu-latest   # ubuntu 러너는 docker 데몬 기본 제공 → Testcontainers(MySQL) 동작
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+
+      # JDK 25 (Temurin). Gradle toolchain(languageVersion=25)과 정합.
+      - name: Set up JDK 25
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '25'
+
+      # gradle 캐시(의존성·빌드 캐시). wrapper 기반이라 별도 gradle 설치 불필요.
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Verify docker (Testcontainers 전제)
+        run: docker info >/dev/null && echo "docker daemon OK"
+
+      # build = compile + test(Testcontainers 라이브 검증 + ArchUnit + 도메인 골든 포함).
+      - name: ./gradlew build
+        run: ./gradlew build --no-daemon --stacktrace
+
+      # 실패 원인 파악용 테스트 리포트 업로드(실패 시에도).
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-test-reports
+          path: backend/build/reports/tests/
+          if-no-files-found: ignore

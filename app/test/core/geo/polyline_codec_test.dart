@@ -129,4 +129,51 @@ void main() {
       expect(PolylineCodec.encode(PolylineCodec.decode(golden)), golden);
     });
   });
+
+  group('상호운용 tie 종결 골든 (T2)', () {
+    // 이 그룹의 기대 문자열은 Java `PolylineCodecInteropTest`의
+    // 'T2 — tie 종결 골든' 블록과 **문자 단위로 동일**하다(양쪽 강제 — QA 이월
+    // "폴리라인 정밀도" 최종 종결 장치).
+    //
+    // ±0.000005° 는 *1e5 = 정확히 ±0.5 (IEEE754 정확한 tie)이므로 half-away-from-zero
+    // 규약이 강제된다: Dart num.round()는 절댓값 큰 쪽으로 반올림한다
+    //   (+0.5→+1='A', -0.5→-1='@'). 서버가 Math.round(half-up)로 회귀하면 음수 tie가
+    //   0으로 잘려 "@?"가 "??"로 어긋난다. 기대값 출처: 표준 알고리즘 + course-api.md
+    //   tie 규약(구현 역산 아님).
+
+    test('+0.000005° 위도 tie 는 절댓값 큰 쪽으로 "A?"', () {
+      expect(PolylineCodec.encode(const [LatLng(0.000005, 0.0)]), 'A?');
+    });
+
+    test('-0.000005° 위도 tie 는 절댓값 큰 쪽으로 "@?" (half-up 이면 "??" 로 갈림)', () {
+      expect(PolylineCodec.encode(const [LatLng(-0.000005, 0.0)]), '@?');
+    });
+
+    test('-0.000005° 경도 tie 도 대칭으로 "?@"', () {
+      expect(PolylineCodec.encode(const [LatLng(0.0, -0.000005)]), '?@');
+    });
+
+    test('위·경도 동시 음의 tie 는 "@@"', () {
+      expect(PolylineCodec.encode(const [LatLng(-0.000005, -0.000005)]), '@@');
+    });
+
+    test('자체 상호운용 벡터(음좌표+tie 혼합)는 양쪽 동일한 "AABBAA" 로 인코딩·왕복', () {
+      // (0.000005,0.000005)→(+1,+1)='A''A', (-0.00001,-0.00001)→(-2,-2)='B''B',
+      // (0,0)→(+1,+1)='A''A'. Java 측과 동일 값.
+      const vec = [
+        LatLng(0.000005, 0.000005),
+        LatLng(-0.00001, -0.00001),
+        LatLng(0.0, 0.0),
+      ];
+      expect(PolylineCodec.encode(vec), 'AABBAA');
+
+      final back = PolylineCodec.decode('AABBAA');
+      expect(back.length, 3);
+      // tie 가 절댓값 큰 쪽으로 갔으므로 첫 점은 +1LSB(0.00001)로 복원.
+      expect(back[0].lat, 0.00001);
+      expect(back[0].lng, 0.00001);
+      expect(back[1].lat, -0.00001);
+      expect(back[2].lat, 0.0);
+    });
+  });
 }
