@@ -42,3 +42,19 @@ android {
 flutter {
     source = "../.."
 }
+
+// dev 편의 (회귀 R-005): 디버그 빌드 때마다 adb reverse 터널을 자동 개통한다.
+// 실기기 USB 재연결·앱 재실행 시 터널이 소리 없이 사라져 NETWORK_ERROR가
+// 재발하는 것을 원천 차단 — 사람이 기억할 필요가 없어야 재발하지 않는다.
+// 기기 미연결·다중 기기·CI(adb 없음/exit≠0)에서는 조용히 건너뛴다.
+val adbReverseDev = tasks.register<Exec>("adbReverseDev") {
+    val adbExe = android.adbExecutable
+    onlyIf { adbExe.exists() }
+    commandLine(adbExe.absolutePath, "reverse", "tcp:8080", "tcp:8080")
+    isIgnoreExitValue = true
+}
+tasks.whenTaskAdded {
+    if (name == "assembleDebug") {
+        finalizedBy(adbReverseDev)
+    }
+}
