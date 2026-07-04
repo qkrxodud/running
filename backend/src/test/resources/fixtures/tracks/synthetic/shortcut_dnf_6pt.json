@@ -1,0 +1,23 @@
+{
+  "_meta": {
+    "purpose": "지름길 주파(거리 미달) DNF 픽스처. 코스의 ~40%만 달리고 종료.",
+    "geometry": "37.5000..37.5045 사이 0.0009° 간격 6점(자오선). 도착점(37.5090) 근처 미진입.",
+    "course_finish": "37.5090,127.0",
+    "course_distance_m": 1001,
+    "expected_after_refine": {
+      "total_distance_m": 400,
+      "gps_gap_count": 0,
+      "finish_status": "DNF",
+      "finished_at_millis": null,
+      "coverage_ratio": 1.0,
+      "note": "①도착 미진입·②거리 400<900(90%) 미충족 → DNF. 단 정제 트랙·거리(400)는 보존(리플레이 표시)."
+    }
+  },
+  "client_upload_id": "f2000000-0000-0000-0000-000000000b02",
+  "started_at": "2026-07-11T00:00:00Z",
+  "polyline": "_f{cF_ucfWsD?sD?sD?sD?sD?",
+  "timestamps": [1752181200000, 1752181230000, 1752181260000, 1752181290000, 1752181320000, 1752181350000],
+  "speeds": [0.0, 3.3, 3.3, 3.3, 3.3, 3.3],
+  "accuracies": [8.0, 8.0, 8.0, 8.0, 8.0, 8.0],
+  "client_meta": { "os": "synthetic", "os_version": "0", "device_model": "hand-calc" }
+}

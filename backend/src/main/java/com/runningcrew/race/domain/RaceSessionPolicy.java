@@ -33,6 +33,14 @@ public final class RaceSessionPolicy {
             case CANCEL -> (current == RaceStatus.DRAFT || current == RaceStatus.OPEN
                     || current == RaceStatus.RUNNING)
                     ? RaceStatus.CANCELLED
+                    : illegal(current, command);   // FINALIZING/COMPLETED cancel=409(O-M2-2, SS-1)
+            // 마감 진입: OPEN·RUNNING 모두 허용(미규정-2, STARTED 신호 유실 내성) + FINALIZING 재진입 멱등.
+            case FINALIZE -> (current == RaceStatus.OPEN || current == RaceStatus.RUNNING
+                    || current == RaceStatus.FINALIZING)
+                    ? RaceStatus.FINALIZING
+                    : illegal(current, command);
+            case COMPLETE -> current == RaceStatus.FINALIZING
+                    ? RaceStatus.COMPLETED
                     : illegal(current, command);
         };
     }

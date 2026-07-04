@@ -23,7 +23,13 @@ public enum ErrorCode {
     ALREADY_JOINED(HttpStatus.CONFLICT, "이미 참가한 크루입니다."),
     CREW_CLOSED(HttpStatus.CONFLICT, "종료된 크루입니다."),
     COURSE_IMMUTABLE(HttpStatus.CONFLICT, "이미 발행된 코스는 수정할 수 없습니다."),
-    SESSION_STATE_INVALID(HttpStatus.CONFLICT, "허용되지 않은 세션 상태 전이입니다.");
+    SESSION_STATE_INVALID(HttpStatus.CONFLICT, "허용되지 않은 세션 상태 전이입니다."),
+    // M2-A 트랙 업로드/결과(계약 track-api.md · conventions.md §4 v0.1.2).
+    TRACK_ALREADY_UPLOADED(HttpStatus.CONFLICT, "이미 다른 내용으로 업로드된 트랙입니다."),
+    TRACK_PAYLOAD_INVALID(HttpStatus.BAD_REQUEST, "트랙 페이로드가 유효하지 않습니다."),
+    TRACK_ARRAY_LENGTH_MISMATCH(HttpStatus.BAD_REQUEST, "트랙 병렬 배열 길이가 일치하지 않습니다."),
+    TRACK_TOO_LARGE(HttpStatus.PAYLOAD_TOO_LARGE, "트랙 크기 상한을 초과했습니다."),
+    RESULT_NOT_READY(HttpStatus.CONFLICT, "결과가 아직 확정되지 않았습니다.");
 
     private final HttpStatus status;
     private final String defaultMessage;

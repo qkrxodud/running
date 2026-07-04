@@ -43,6 +43,22 @@ public class Participation {
         return status == ParticipationStatus.STARTED;
     }
 
+    /**
+     * 마감 확정 시 최종 상태 전이(A9 SessionClosePolicy 산출 반영). REGISTERED/STARTED에서
+     * FINISHED/DNF/DNS로 확정한다. 이미 최종(FINISHED/DNF/DNS)이거나 WITHDRAWN이면 <b>멱등 no-op</b>.
+     */
+    public void finalizeTo(ParticipationStatus target) {
+        if (status == ParticipationStatus.WITHDRAWN) {
+            return;   // 탈퇴 행 보존 — 건드리지 않음
+        }
+        if (status == ParticipationStatus.FINISHED
+                || status == ParticipationStatus.DNF
+                || status == ParticipationStatus.DNS) {
+            return;   // 이미 확정 — 재실행 멱등
+        }
+        this.status = target;
+    }
+
     public Long getId() {
         return id;
     }

@@ -12,7 +12,7 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 /**
- * RaceSession 상태머신 <b>전수 매트릭스 골든</b>(6상태 × 4명령 = 24셀 전량 명시).
+ * RaceSession 상태머신 <b>전수 매트릭스 골든</b>(6상태 × 6명령 = 36셀 전량 명시 — M2에서 FINALIZE/COMPLETE 추가).
  *
  * <p>기대값은 설계 문서 {@code _workspace/22_analyst_design_B2.md} §2.4 매트릭스에서 도출한다
  * (구현 역산 금지). {@code null} 기대는 불법 전이 = {@link IllegalSessionTransitionException}.
@@ -57,13 +57,29 @@ class RaceSessionPolicyMatrixGoldenTest {
         rows.add(Arguments.of(RaceStatus.COMPLETED, SessionCommand.START, null));
         rows.add(Arguments.of(RaceStatus.CANCELLED, SessionCommand.START, null));
 
-        // CANCEL: 종료 전 3상태(DRAFT/OPEN/RUNNING) → CANCELLED, 종료 3상태는 불법
+        // CANCEL: 종료 전 3상태(DRAFT/OPEN/RUNNING) → CANCELLED, 종료 3상태는 불법(FINALIZING cancel=409, SS-1)
         rows.add(Arguments.of(RaceStatus.DRAFT, SessionCommand.CANCEL, RaceStatus.CANCELLED));
         rows.add(Arguments.of(RaceStatus.OPEN, SessionCommand.CANCEL, RaceStatus.CANCELLED));
         rows.add(Arguments.of(RaceStatus.RUNNING, SessionCommand.CANCEL, RaceStatus.CANCELLED));
         rows.add(Arguments.of(RaceStatus.FINALIZING, SessionCommand.CANCEL, null));
         rows.add(Arguments.of(RaceStatus.COMPLETED, SessionCommand.CANCEL, null));
         rows.add(Arguments.of(RaceStatus.CANCELLED, SessionCommand.CANCEL, null));
+
+        // FINALIZE(M2, 설계 42 §5.3): OPEN·RUNNING·FINALIZING(재진입 멱등) → FINALIZING, 나머지 불법
+        rows.add(Arguments.of(RaceStatus.DRAFT, SessionCommand.FINALIZE, null));
+        rows.add(Arguments.of(RaceStatus.OPEN, SessionCommand.FINALIZE, RaceStatus.FINALIZING));
+        rows.add(Arguments.of(RaceStatus.RUNNING, SessionCommand.FINALIZE, RaceStatus.FINALIZING));
+        rows.add(Arguments.of(RaceStatus.FINALIZING, SessionCommand.FINALIZE, RaceStatus.FINALIZING));
+        rows.add(Arguments.of(RaceStatus.COMPLETED, SessionCommand.FINALIZE, null));
+        rows.add(Arguments.of(RaceStatus.CANCELLED, SessionCommand.FINALIZE, null));
+
+        // COMPLETE(M2): FINALIZING 에서만 → COMPLETED, 나머지 불법
+        rows.add(Arguments.of(RaceStatus.DRAFT, SessionCommand.COMPLETE, null));
+        rows.add(Arguments.of(RaceStatus.OPEN, SessionCommand.COMPLETE, null));
+        rows.add(Arguments.of(RaceStatus.RUNNING, SessionCommand.COMPLETE, null));
+        rows.add(Arguments.of(RaceStatus.FINALIZING, SessionCommand.COMPLETE, RaceStatus.COMPLETED));
+        rows.add(Arguments.of(RaceStatus.COMPLETED, SessionCommand.COMPLETE, null));
+        rows.add(Arguments.of(RaceStatus.CANCELLED, SessionCommand.COMPLETE, null));
 
         return rows;
     }
@@ -84,8 +100,8 @@ class RaceSessionPolicyMatrixGoldenTest {
     }
 
     @Test
-    @DisplayName("표가 6상태 × 4명령 = 24셀을 빠짐없이 덮는지 (누락 방지 가드)")
-    void 매트릭스는_24셀을_모두_덮는다() {
+    @DisplayName("표가 6상태 × 6명령 = 36셀을 빠짐없이 덮는지 (누락 방지 가드)")
+    void 매트릭스는_전_셀을_모두_덮는다() {
         assertThat(matrix()).hasSize(RaceStatus.values().length * SessionCommand.values().length);
     }
 }

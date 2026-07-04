@@ -2,6 +2,7 @@ package com.runningcrew.race.adapter.out.persistence;
 
 import com.runningcrew.race.application.port.out.ParticipationRepository;
 import com.runningcrew.race.domain.Participation;
+import java.util.List;
 import java.util.Optional;
 import org.springframework.stereotype.Repository;
 
@@ -19,6 +20,13 @@ public class ParticipationPersistenceAdapter implements ParticipationRepository 
     public Optional<Participation> findBySessionIdAndUserId(Long sessionId, Long userId) {
         return jpa.findBySessionIdAndUserId(sessionId, userId)
                 .map(ParticipationPersistenceAdapter::toDomain);
+    }
+
+    @Override
+    public List<Participation> findBySessionId(Long sessionId) {
+        return jpa.findBySessionId(sessionId).stream()
+                .map(ParticipationPersistenceAdapter::toDomain)
+                .toList();
     }
 
     @Override

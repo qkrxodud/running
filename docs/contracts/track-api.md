@@ -4,6 +4,7 @@
 > 근거: `42_analyst_design_M2A.md`, `domain-model` 스킬 Tracking·Ranking 컨텍스트, 계획서 §4 레이스 규칙·§5.3·§5.4, `V1__init.sql`(track_record·track_payload·race_result·rank_entry). 공통 규약은 `conventions.md`(v0.1.2 — 오류코드·§9 배열 시각 예외).
 >
 > **변경 이력**
+> - v0.1.1 (2026-07-04, domain-analyst): **W46-2/R-007 해소** — §1·§2 오류코드 자기모순 제거. 업로드 권한 경계를 **크루 멤버십=403 / 멤버지만 미등록=409**로 분리(선택지 b). 근거: 계약 전체 불변식 "403=크루 경계"(crew·course·session 비멤버 조회 전부 403), Crew invite-only 규범(비멤버에게 세션 존재·상태 누설 금지). 평가 순서 명시. **서버 수정 필요**(현 구현은 일괄 409 — backend-dev 인계). session-api §6 start의 동일 모순도 병행 개정.
 > - v0.1 (2026-07-04, domain-analyst): 신규. 트랙 업로드(인코딩 폴리라인+병렬배열, 멱등/재업로드 정책 O-M2-4)·업로드 상태 조회·결과/순위 조회. client_meta 3키 격리. epoch millis 시각 배열.
 
 모든 엔드포인트 `auth: required` (`Authorization: Bearer {access_token}` — 401 규약은 auth-api.md §3).
@@ -38,7 +39,9 @@
 
 ## 1. POST /api/v1/sessions/{sessionId}/track — 트랙 업로드
 
-**참가자 본인**. 완주 후(로컬 FINISHED_LOCAL) 사후 업로드. 선 register 필요(participation 부재 시 409). 세션 상태 `OPEN|RUNNING|FINALIZING`에서 수신(마감 직전 도착 내성 — FINALIZING 중 아직 미확정이면 수용, 결과 확정 후엔 거부). `COMPLETED|CANCELLED|DRAFT`는 409.
+**세션 소유 크루의 ACTIVE 멤버 + 참가자 본인**. 완주 후(로컬 FINISHED_LOCAL) 사후 업로드. **선 register 필요**(크루 멤버지만 participation 부재 시 409). 세션 상태 `OPEN|RUNNING|FINALIZING`에서 수신(마감 직전 도착 내성 — FINALIZING 중 아직 미확정이면 수용, 결과 확정 후엔 거부). `COMPLETED|CANCELLED|DRAFT`는 409.
+
+**권한/상태 평가 순서(W46-2/R-007 — 3자 대조 기준)**: ① 세션 없음 → `404 NOT_FOUND` → ② 호출자가 세션 소유 크루의 ACTIVE 멤버 아님 → **`403 FORBIDDEN`**(비멤버에게 세션 존재·상태 누설 금지 — Crew invite-only 규범) → ③ 크루 멤버지만 participation 부재(미등록) 또는 세션 상태 부적합 → **`409 SESSION_STATE_INVALID`** → ④ 이미 업로드됨 → `409 TRACK_ALREADY_UPLOADED` → ⑤ payload 검증(400/413). **403과 409는 배타** — 같은 호출자에 동시 부여 없음.
 
 > **CANCELLED 세션 예외(계획서 §5.2)**: 취소된 세션의 트랙은 이 엔드포인트로 받지 않되, 클라가 보유한 트랙은 "개인 기록(세션 무관 주행)"으로 보존한다 — 개인기록 저장 경로는 M2-C 코스승격②와 함께 별도 정의(현 계약 범위 밖, 여기 명시만).
 
@@ -100,9 +103,9 @@
 - `400 TRACK_PAYLOAD_INVALID` — 폴리라인 디코딩 실패(<2점)·timestamps 역순/미래.
 - `400 TRACK_ARRAY_LENGTH_MISMATCH` — 병렬 배열 길이 불일치(TK-1).
 - `400 VALIDATION_ERROR` — 필수 필드 누락·client_meta 미허용 키.
-- `403 FORBIDDEN` — 참가자 아님.
+- `403 FORBIDDEN` — **세션 소유 크루의 ACTIVE 멤버 아님**(비멤버·탈퇴멤버). 세션 상태·존재 누설 금지.
 - `404 NOT_FOUND` — 세션 없음.
-- `409 SESSION_STATE_INVALID` — participation 부재(선 register 필요) 또는 세션이 OPEN/RUNNING/FINALIZING 아님(COMPLETED/CANCELLED/DRAFT).
+- `409 SESSION_STATE_INVALID` — **크루 멤버지만** participation 부재(선 register 필요) 또는 세션이 OPEN/RUNNING/FINALIZING 아님(COMPLETED/CANCELLED/DRAFT).
 - `409 TRACK_ALREADY_UPLOADED` — 다른 `client_upload_id`로 이미 업로드된 participation(§4 불변).
 - `413 TRACK_TOO_LARGE` — 크기 상한 초과(TK-3).
 
@@ -110,13 +113,13 @@
 
 ## 2. GET /api/v1/sessions/{sessionId}/track/me — 내 업로드 상태 조회
 
-**참가자 본인**. 업로드·처리 결과 확인(재시도 판단·결과 대기 화면). 트랙 미업로드면 404.
+**세션 소유 크루의 ACTIVE 멤버 본인**. 업로드·처리 결과 확인(재시도 판단·결과 대기 화면). 크루 멤버지만 내 트랙 미업로드면 404.
 
 ### 응답 200
 §1 응답과 동일 shape(`track_record_id`…`gps_gap_count`). payload 블롭은 미포함(track_record 요약만 — 블롭 격리 원칙).
 
 ### 오류
-- `403 FORBIDDEN` — 참가자 아님. · `404 NOT_FOUND` — 세션 없음/내 트랙 미업로드.
+- `403 FORBIDDEN` — 세션 소유 크루의 ACTIVE 멤버 아님. · `404 NOT_FOUND` — 세션 없음 / 크루 멤버지만 내 트랙 미업로드.
 
 ---
 

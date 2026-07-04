@@ -1,0 +1,23 @@
+{
+  "_meta": {
+    "purpose": "GPS 유실(공백) 구간이 있어도 완주 판정은 성립함을 보이는 픽스처. 좌표는 completed_run과 동일, 타임스탬프에 70s 공백 1개 주입.",
+    "geometry": "completed_run_lingers_at_finish 와 동일 좌표(13점). idx3→idx4 사이 Δt=70s(>30s 임계) 공백 1개.",
+    "course_finish": "37.5090,127.0",
+    "course_distance_m": 1001,
+    "expected_after_refine": {
+      "total_distance_m": 951,
+      "gps_gap_count": 1,
+      "finish_status": "FINISHED",
+      "finished_at_millis": 1752181570000,
+      "coverage_ratio": 1.0,
+      "note": "공백 메타는 리플레이 보간용(M3). FinishPolicy는 공백을 판정에 쓰지 않음 → 3조건 충족이면 FINISHED. finished_at은 공백 이후 밀린 시각."
+    }
+  },
+  "client_upload_id": "f3000000-0000-0000-0000-000000000c03",
+  "started_at": "2026-07-11T00:00:00Z",
+  "polyline": "_f{cF_ucfWsD?sD?sD?sD?sD?sD?sD?sD?sD?sD?????",
+  "timestamps": [1752181200000, 1752181230000, 1752181260000, 1752181290000, 1752181360000, 1752181390000, 1752181420000, 1752181450000, 1752181480000, 1752181510000, 1752181540000, 1752181570000, 1752181600000],
+  "speeds": [0.0, 3.3, 3.3, 3.3, 3.3, 3.3, 3.3, 3.3, 3.3, 3.3, 3.3, 0.0, 0.0],
+  "accuracies": [8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0, 8.0],
+  "client_meta": { "os": "synthetic", "os_version": "0", "device_model": "hand-calc" }
+}

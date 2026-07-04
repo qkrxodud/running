@@ -67,6 +67,20 @@ public class RaceSession {
         this.status = RaceSessionPolicy.apply(status, SessionCommand.START);
     }
 
+    /** OPEN|RUNNING|FINALIZING→FINALIZING(마감 진입, 재진입 멱등 — A9). */
+    public void finalizeSession() {
+        this.status = RaceSessionPolicy.apply(status, SessionCommand.FINALIZE);
+    }
+
+    /** FINALIZING→COMPLETED(결과 확정 후 — ResultFinalized 소비). */
+    public void complete() {
+        this.status = RaceSessionPolicy.apply(status, SessionCommand.COMPLETE);
+    }
+
+    public boolean isTerminal() {
+        return status == RaceStatus.COMPLETED || status == RaceStatus.CANCELLED;
+    }
+
     public Long getId() {
         return id;
     }

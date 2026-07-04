@@ -4,6 +4,7 @@
 > 근거: `22_analyst_design_B2.md` §2·§3(RaceSession 상태머신·Participation), planner A-B5, `domain-model` 스킬 Race 컨텍스트, `V1__init.sql`. 공통 규약은 `conventions.md`.
 >
 > **변경 이력**
+> - v0.2.1 (2026-07-04, domain-analyst): **W46-2/R-007 정합** — §6 start 오류코드 자기모순 제거(403 "참가자 아님" → **403 크루 비멤버 / 409 멤버 미등록** 배타 분리). track-api §1과 동일 규칙(참가자 액션 오류 모델 통일). 응답 shape 무변경.
 > - v0.2 (2026-07-04, domain-analyst): 배치 B2 — 조회 세트(생성/목록/상세) shape 확정 유지 + 명령 append(§4 open·§5 register·§6 start·§7 cancel). 상태 전이 매트릭스·오류코드 전수. 세션 생성에 `upload_deadline > scheduled_at` 검증 추가. OPEN 발행=별도 open 명령(생성 즉시 DRAFT), RUNNING 진입=첫 STARTED 신호. 응답 shape 변경 없음(v0.1 호환).
 > - v0.1 (2026-07-04, domain-analyst): 계약 우선 초안(조회 세트만).
 
@@ -169,10 +170,10 @@
 ### 응답 200
 세션 상세(§3). 호출자 STARTED, 최초면 세션 `status = RUNNING`.
 
-### 오류
-- `403 FORBIDDEN` — 참가자 아님(권한).
+### 오류 (평가 순서 — W46-2/R-007 정합: 403 크루경계 → 409 상태. 배타)
+- `403 FORBIDDEN` — **세션 소유 크루의 ACTIVE 멤버 아님**(비멤버에게 세션 존재·상태 누설 금지).
 - `404 NOT_FOUND` — 세션 없음.
-- `409 SESSION_STATE_INVALID` — participation 부재(선 register 필요) 또는 세션이 OPEN/RUNNING 아님.
+- `409 SESSION_STATE_INVALID` — **크루 멤버지만** participation 부재(선 register 필요) 또는 세션이 OPEN/RUNNING 아님.
 
 ---
 

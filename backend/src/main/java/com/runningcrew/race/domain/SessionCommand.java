@@ -8,5 +8,8 @@ public enum SessionCommand {
     OPEN,
     REGISTER,
     START,
-    CANCEL
+    CANCEL,
+    // M2-A 마감·확정 전이(설계 42 §5.3 이벤트 흐름).
+    FINALIZE,   // OPEN|RUNNING|FINALIZING → FINALIZING (전원 업로드 또는 deadline. 재진입 멱등)
+    COMPLETE    // FINALIZING → COMPLETED (ResultFinalized 후)
 }
