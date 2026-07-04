@@ -4,6 +4,7 @@
 > 관리자: domain-analyst. 규범: `domain-model` 스킬, 계획서 §5~§7.
 >
 > **변경 이력**
+> - v0.1.2 (2026-07-04, domain-analyst): M2-A — §4 code 집합에 트랙 업로드/결과 5종 추가(`TRACK_ALREADY_UPLOADED`, `TRACK_PAYLOAD_INVALID`, `TRACK_ARRAY_LENGTH_MISMATCH`, `TRACK_TOO_LARGE`, `RESULT_NOT_READY`), §9 대량 배열 시각 표현 예외 신설(track 업로드 payload의 timestamp 배열은 epoch millis). 상세는 track-api.md가 진실.
 > - v0.1.1 (2026-07-04, domain-analyst): 배치 B1 — §4 code 집합에 AUTH_* 3종 추가, §5 인증 미규정 해소(상세는 auth-api.md가 진실), §6 페이지네이션 offset 방식 확정.
 > - v0.1 (2026-07-04, domain-analyst): 계약 우선 초안.
 
@@ -42,7 +43,7 @@
   - `403 FORBIDDEN` — 권한 부족(크루장 전용 작업을 멤버가 호출 등).
   - `404 NOT_FOUND` — 자원 없음.
   - `409 CONFLICT` — 상태 충돌(이미 참가함, 만료된 초대코드, 코스 불변 위반 등).
-- 공통 `code` 집합: `VALIDATION_ERROR`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `INVITE_CODE_INVALID`, `INVITE_CODE_EXPIRED`, `INVITE_CODE_EXHAUSTED`, `ALREADY_JOINED`, `CREW_CLOSED`, `COURSE_IMMUTABLE`, `SESSION_STATE_INVALID` + **v0.1.1 추가(401 세분)**: `AUTH_KAKAO_TOKEN_INVALID`, `AUTH_TOKEN_EXPIRED`, `AUTH_REFRESH_INVALID` (의미·클라 플로우는 auth-api.md §3). (이후 배치에서 확장)
+- 공통 `code` 집합: `VALIDATION_ERROR`, `UNAUTHORIZED`, `FORBIDDEN`, `NOT_FOUND`, `INVITE_CODE_INVALID`, `INVITE_CODE_EXPIRED`, `INVITE_CODE_EXHAUSTED`, `ALREADY_JOINED`, `CREW_CLOSED`, `COURSE_IMMUTABLE`, `SESSION_STATE_INVALID` + **v0.1.1 추가(401 세분)**: `AUTH_KAKAO_TOKEN_INVALID`, `AUTH_TOKEN_EXPIRED`, `AUTH_REFRESH_INVALID` (의미·클라 플로우는 auth-api.md §3) + **v0.1.2 추가(M2 트랙/결과)**: `TRACK_ALREADY_UPLOADED`(409 — 동일 participation 재업로드, 다른 내용), `TRACK_PAYLOAD_INVALID`(400 — 폴리라인 디코딩 실패·시간 역순/미래), `TRACK_ARRAY_LENGTH_MISMATCH`(400 — 병렬 배열 길이 불일치), `TRACK_TOO_LARGE`(413 — 크기 상한 초과), `RESULT_NOT_READY`(409 — 결과 미확정 세션의 결과 조회). 의미는 track-api.md. (이후 배치에서 확장)
 
 ## 5. 인증
 
@@ -80,3 +81,9 @@
 ## 8. 플랫폼 무지
 
 - 계약에 플랫폼 종속 필드 금지. 예외는 디버깅용 `client_meta`(자유 형식 객체, 서버는 저장만)뿐 — 도메인 판정에 사용 금지.
+- `client_meta` 허용 키는 `{os, os_version, device_model}` **3개로 고정**(계획서 §6). 서버는 저장만 하고 완주·순위·마감 판정에 절대 사용 안 함.
+
+## 9. 대량 배열 시각 표현 예외 (v0.1.2)
+
+- §3(ISO-8601 문자열)은 **자원 시각 필드**(`scheduled_at`, `started_at`, `finished_at` 등 단일 시점) 규약이다.
+- 트랙 업로드 payload의 **`timestamps` 배열**처럼 수백~수천 원소의 대량 시각열은 예외로 **epoch milliseconds (int64, UTC 기준)** 를 쓴다 — 문자열 파싱 비용·전송 크기 절감. GPS 시각 우선 원칙은 동일 적용(§track-api). 이 예외는 track 업로드 병렬 배열에만 국한한다.
