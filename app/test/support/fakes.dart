@@ -5,12 +5,14 @@ import 'package:running/core/model/crew_dtos.dart';
 import 'package:running/core/model/history_dtos.dart';
 import 'package:running/core/model/page_response.dart';
 import 'package:running/core/model/race_dtos.dart';
+import 'package:running/core/model/replay_dtos.dart';
 import 'package:running/core/model/track_dtos.dart';
 import 'package:running/core/model/user_dtos.dart';
 import 'package:running/data/auth_repository.dart';
 import 'package:running/data/course_repository.dart';
 import 'package:running/data/crew_repository.dart';
 import 'package:running/data/history_repository.dart';
+import 'package:running/data/replay_repository.dart';
 import 'package:running/data/session_repository.dart';
 import 'package:running/data/track_repository.dart';
 import 'package:running/data/user_repository.dart';
@@ -383,4 +385,24 @@ class FakeKakaoAuthService implements KakaoAuthService {
 
   @override
   Future<String?> login() async => token;
+}
+
+/// 리플레이 스냅샷 페이크 — 뷰어(M3-B) 상태별 UI 검증용.
+class FakeReplayRepository implements ReplayRepository {
+  FakeReplayRepository({this.response, this.throwOnSnapshot});
+
+  final ReplaySnapshotResponse? response;
+  final Object? throwOnSnapshot;
+
+  @override
+  Future<ReplaySnapshotResponse> snapshot(int sessionId) async {
+    if (throwOnSnapshot != null) throw throwOnSnapshot!;
+    return response ??
+        const ReplaySnapshotResponse(
+          status: ReplayStatus.generating,
+          schemaVersion: null,
+          displayNames: null,
+          payload: null,
+        );
+  }
 }

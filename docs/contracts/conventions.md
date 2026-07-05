@@ -4,6 +4,7 @@
 > 관리자: domain-analyst. 규범: `domain-model` 스킬, 계획서 §5~§7.
 >
 > **변경 이력**
+> - v0.1.4 (2026-07-05, domain-analyst): M3-A — §10 딥링크 규약 신설(`runningcrew://` 스킴 — 세션/리플레이 경로, FCM data.deep_link 탑재). O-M3-3 확정.
 > - v0.1.3 (2026-07-05, domain-analyst): M2-C — §4 상태 매핑에 `503 SERVICE_UNAVAILABLE`(의존성 일시 장애) 추가, code 집합에 `AUTH_KAKAO_UNAVAILABLE`(503 — kapi 장애, auth-api §1), `COURSE_PROMOTION_INELIGIBLE`(409 — 코스 승격 자격 미달, course-api §4) 추가.
 > - v0.1.2 (2026-07-04, domain-analyst): M2-A — §4 code 집합에 트랙 업로드/결과 5종 추가(`TRACK_ALREADY_UPLOADED`, `TRACK_PAYLOAD_INVALID`, `TRACK_ARRAY_LENGTH_MISMATCH`, `TRACK_TOO_LARGE`, `RESULT_NOT_READY`), §9 대량 배열 시각 표현 예외 신설(track 업로드 payload의 timestamp 배열은 epoch millis). 상세는 track-api.md가 진실.
 > - v0.1.1 (2026-07-04, domain-analyst): 배치 B1 — §4 code 집합에 AUTH_* 3종 추가, §5 인증 미규정 해소(상세는 auth-api.md가 진실), §6 페이지네이션 offset 방식 확정.
@@ -90,3 +91,16 @@
 
 - §3(ISO-8601 문자열)은 **자원 시각 필드**(`scheduled_at`, `started_at`, `finished_at` 등 단일 시점) 규약이다.
 - 트랙 업로드 payload의 **`timestamps` 배열**처럼 수백~수천 원소의 대량 시각열은 예외로 **epoch milliseconds (int64, UTC 기준)** 를 쓴다 — 문자열 파싱 비용·전송 크기 절감. GPS 시각 우선 원칙은 동일 적용(§track-api). 이 예외는 track 업로드 병렬 배열에만 국한한다.
+- **리플레이 스냅샷 payload의 `t_ms`(상대 경과 시각)**도 동일 취지로 **정수 밀리초**를 쓴다 — 단 이는 절대시각(epoch)이 아니라 **각자 시작 t=0 기준 상대 경과**(replay-api §2). 절대 시점 필드(finalized_at 등)는 §3 ISO-8601 유지.
+
+## 10. 딥링크 규약 (v0.1.4 — O-M3-3)
+
+- **스킴: `runningcrew://`** (Android/iOS 커스텀 스킴).
+- 경로 매핑(FCM 알림 탭·외부 진입 → go_router):
+  | 딥링크 URI | 화면 | go_router 경로 |
+  |---|---|---|
+  | `runningcrew://session/{sessionId}` | 세션 상세 | `/sessions/:id` |
+  | `runningcrew://replay/{sessionId}` | 리플레이 뷰어 | `/sessions/:id/replay` |
+- **리플레이 딥링크 키 = `sessionId`**(snapshotId 아님) — 스냅샷은 세션당 최신 1개이므로 재생성돼도 링크 안정(재생성 내성).
+- **FCM payload**: `data.deep_link`에 full URI 문자열 탑재(예 `"runningcrew://replay/91"`). 클라는 이 값을 라우터에 위임. 알림 종류(리마인더·리플레이 열림)와 무관하게 `deep_link` 단일 필드로 라우팅(M3-C).
+- 실 수신·라우팅 동작 검증은 Firebase 발급 게이트 뒤(M3-C). 규약은 지금 확정 — 서버·클라 양쪽이 동일 스킴·경로에 합의.

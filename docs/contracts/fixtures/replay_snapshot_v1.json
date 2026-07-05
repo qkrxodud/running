@@ -1,0 +1,158 @@
+{
+  "status" : "READY",
+  "schema_version" : 1,
+  "display_names" : {
+    "7" : "지현",
+    "3" : "민수",
+    "8" : "탈퇴한 러너"
+  },
+  "payload" : {
+    "schema_version" : 1,
+    "session_id" : 91,
+    "course" : {
+      "distance_m" : 500,
+      "route_polyline" : "_p~iF~ps|U_ulLnnqC",
+      "start" : {
+        "lat" : 37.5,
+        "lng" : 127.0
+      },
+      "finish" : {
+        "lat" : 37.50449660802959,
+        "lng" : 127.0
+      }
+    },
+    "duration_ms" : 190000,
+    "participants" : [ {
+      "user_id" : 7,
+      "finish_status" : "FINISHED",
+      "finish_time_ms" : 190000,
+      "frames" : [ {
+        "t_ms" : 0,
+        "lat" : 37.5,
+        "lng" : 127.0,
+        "cum_dist_m" : 0,
+        "is_gap" : false
+      }, {
+        "t_ms" : 20000,
+        "lat" : 37.50089932160592,
+        "lng" : 127.0,
+        "cum_dist_m" : 100,
+        "is_gap" : false
+      }, {
+        "t_ms" : 40000,
+        "lat" : 37.501798643211835,
+        "lng" : 127.0,
+        "cum_dist_m" : 200,
+        "is_gap" : false
+      }, {
+        "t_ms" : 90000,
+        "lat" : 37.502697964817756,
+        "lng" : 127.0,
+        "cum_dist_m" : 300,
+        "is_gap" : false
+      }, {
+        "t_ms" : 140000,
+        "lat" : 37.50359728642368,
+        "lng" : 127.0,
+        "cum_dist_m" : 400,
+        "is_gap" : false
+      }, {
+        "t_ms" : 190000,
+        "lat" : 37.50449660802959,
+        "lng" : 127.0,
+        "cum_dist_m" : 500,
+        "is_gap" : false
+      } ],
+      "segments" : [ {
+        "seg_index" : 0,
+        "start_dist_m" : 0,
+        "end_dist_m" : 500,
+        "pace_s_per_km" : 232,
+        "color_bucket" : 0
+      } ]
+    }, {
+      "user_id" : 3,
+      "finish_status" : "FINISHED",
+      "finish_time_ms" : 185000,
+      "frames" : [ {
+        "t_ms" : 0,
+        "lat" : 37.5,
+        "lng" : 127.0,
+        "cum_dist_m" : 0,
+        "is_gap" : false
+      }, {
+        "t_ms" : 60000,
+        "lat" : 37.50089932160592,
+        "lng" : 127.0,
+        "cum_dist_m" : 100,
+        "is_gap" : false
+      }, {
+        "t_ms" : 120000,
+        "lat" : 37.501798643211835,
+        "lng" : 127.0,
+        "cum_dist_m" : 200,
+        "is_gap" : false
+      }, {
+        "t_ms" : 150000,
+        "lat" : 37.502697964817756,
+        "lng" : 127.0,
+        "cum_dist_m" : 300,
+        "is_gap" : false
+      }, {
+        "t_ms" : 175000,
+        "lat" : 37.50359728642368,
+        "lng" : 127.0,
+        "cum_dist_m" : 400,
+        "is_gap" : false
+      }, {
+        "t_ms" : 185000,
+        "lat" : 37.50449660802959,
+        "lng" : 127.0,
+        "cum_dist_m" : 500,
+        "is_gap" : false
+      } ],
+      "segments" : [ {
+        "seg_index" : 0,
+        "start_dist_m" : 0,
+        "end_dist_m" : 500,
+        "pace_s_per_km" : 300,
+        "color_bucket" : 2
+      } ]
+    }, {
+      "user_id" : 8,
+      "finish_status" : "DNF",
+      "frames" : [ {
+        "t_ms" : 0,
+        "lat" : 37.5,
+        "lng" : 127.0,
+        "cum_dist_m" : 0,
+        "is_gap" : false
+      }, {
+        "t_ms" : 30000,
+        "lat" : 37.50089932160592,
+        "lng" : 127.0,
+        "cum_dist_m" : 100,
+        "is_gap" : false
+      }, {
+        "t_ms" : 90000,
+        "lat" : 37.501798643211835,
+        "lng" : 127.0,
+        "cum_dist_m" : 200,
+        "is_gap" : true
+      } ],
+      "segments" : [ {
+        "seg_index" : 0,
+        "start_dist_m" : 0,
+        "end_dist_m" : 500,
+        "pace_s_per_km" : 260,
+        "color_bucket" : 1
+      } ]
+    } ],
+    "overtakes" : [ {
+      "at_dist_m" : 488,
+      "passer_user_id" : 3,
+      "passed_user_id" : 7,
+      "t_ms" : 184000
+    } ]
+  }
+}

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../app/app_theme.dart';
 import '../../core/model/api_error.dart';
@@ -37,7 +38,8 @@ class SessionResultScreen extends ConsumerWidget {
               child: CircularProgressIndicator(color: AppColors.lime)),
           error: (e, _) => _error(context, ref, e),
           data: (outcome) => switch (outcome) {
-            ResultReady(:final result) => _RankingView(result: result),
+            ResultReady(:final result) =>
+              _RankingView(result: result, sessionId: sessionId),
             ResultPending() => _WaitingView(sessionId: sessionId),
           },
         ),
@@ -163,9 +165,10 @@ class _WaitingView extends ConsumerWidget {
 
 /// C1 — 순위표.
 class _RankingView extends StatelessWidget {
-  const _RankingView({required this.result});
+  const _RankingView({required this.result, required this.sessionId});
 
   final RaceResultResponse result;
+  final int sessionId;
 
   @override
   Widget build(BuildContext context) {
@@ -196,8 +199,8 @@ class _RankingView extends StatelessWidget {
               child: _ResultRow(entry: e),
             )),
         const SizedBox(height: 18),
-        // 리플레이 진입 — M3 placeholder(미지원 안내).
-        _ReplayPlaceholder(),
+        // 리플레이 뷰어 진입 (M3-B).
+        _ReplayEntry(sessionId: sessionId),
       ],
     );
   }
@@ -299,12 +302,16 @@ class _ResultRow extends StatelessWidget {
   }
 }
 
-/// 리플레이 다시보기 — M3(replay-api) 대기. 눌러도 "준비 중" 안내(자리 확보).
-class _ReplayPlaceholder extends StatelessWidget {
+/// 리플레이 다시보기 진입 (M3-B) — 뷰어로 이동. 스냅샷 상태별 UI 는 뷰어가 처리.
+class _ReplayEntry extends StatelessWidget {
+  const _ReplayEntry({required this.sessionId});
+
+  final int sessionId;
+
   @override
   Widget build(BuildContext context) {
-    return Opacity(
-      opacity: 0.5,
+    return GestureDetector(
+      onTap: () => context.push('/sessions/$sessionId/replay'),
       child: Container(
         height: 52,
         decoration: BoxDecoration(
@@ -316,7 +323,7 @@ class _ReplayPlaceholder extends StatelessWidget {
           children: [
             Icon(Icons.replay, color: AppColors.ink, size: 20),
             SizedBox(width: 8),
-            Text('리플레이 다시보기 (다음 업데이트 · M3)',
+            Text('리플레이 다시보기',
                 style: TextStyle(
                     color: AppColors.ink, fontWeight: FontWeight.w700)),
           ],

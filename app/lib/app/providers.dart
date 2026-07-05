@@ -9,6 +9,7 @@ import '../data/auth_repository.dart';
 import '../data/course_repository.dart';
 import '../data/crew_repository.dart';
 import '../data/history_repository.dart';
+import '../data/replay_repository.dart';
 import '../data/session_repository.dart';
 import '../data/token_store.dart';
 import '../data/track_repository.dart';
@@ -76,6 +77,11 @@ final trackRepositoryProvider = Provider<TrackRepository>(
 /// 내 기록 히스토리·PB (history-api.md, M2-C).
 final historyRepositoryProvider = Provider<HistoryRepository>(
   (ref) => HttpHistoryRepository(dio: ref.watch(dioProvider)),
+);
+
+/// 리플레이 스냅샷 조회 (replay-api.md, M3-B).
+final replayRepositoryProvider = Provider<ReplayRepository>(
+  (ref) => HttpReplayRepository(dio: ref.watch(dioProvider)),
 );
 
 final appVersionRepositoryProvider = Provider<AppVersionRepository>(

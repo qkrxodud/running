@@ -47,6 +47,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String uri = request.getRequestURI();
         return uri.equals("/api/v1/app-version")
                 || uri.startsWith("/api/v1/auth/")
+                // admin 경로는 사용자 JWT가 아닌 운영 토큰(X-Admin-Token, AdminAuthInterceptor)으로 게이트.
+                || uri.startsWith("/api/v1/admin/")
                 || uri.startsWith("/actuator");
     }
 

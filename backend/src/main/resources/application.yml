@@ -68,6 +68,23 @@ track:
 promotion:
   min-distance-m: ${PROMOTION_MIN_DISTANCE_M:1000}
 
+# 리플레이 스냅샷(replay-api / M3-A) — schema_version·payload 크기 상한(외부화). 초과 시 생성 FAILED(RP-13).
+# 2 MiB: 정상 규모(10명×600pt ≈ 450KB)의 ~4배 여유(설계 72 §1.5).
+replay:
+  snapshot:
+    schema-version: ${REPLAY_SCHEMA_VERSION:1}
+    max-bytes: ${REPLAY_SNAPSHOT_MAX_BYTES:2097152}
+
+# 세션 리마인더(M3-C) — 예정 시각 전 리드 윈도(분)·폴링 주기(ms). clock 주입으로 발송 판정.
+reminder:
+  lead-minutes: ${REMINDER_LEAD_MINUTES:30}
+  poll-interval-ms: ${REMINDER_POLL_INTERVAL_MS:60000}
+
+# 관리(admin) 운영 토큰 — X-Admin-Token 대조(replay 재생성 등). 기본 프로필엔 미설정(admin 비활성 — prod
+# 노출 제한). local/sandbox·운영 환경에서 env ADMIN_TOKEN으로 주입 시 활성.
+admin:
+  token: ${ADMIN_TOKEN:}
+
 # JWT (계약 auth-api.md 확정 스펙: HS256, access 30분 / refresh 30일)
 # 시크릿은 env JWT_SECRET(≥256bit) — 기본 프로필엔 기본값 없음(미설정 시 부팅 실패 fail-fast).
 jwt:
@@ -91,6 +108,9 @@ spring:
       on-profile: local
 jwt:
   secret: ${JWT_SECRET:local-dev-only-jwt-secret-do-not-use-in-prod-0123456789abcdef}
+# local 개발 편의 — admin 재생성 API 활성(운영은 env ADMIN_TOKEN 필수, 기본값 없음).
+admin:
+  token: ${ADMIN_TOKEN:local-dev-admin-token}
 
 ---
 # sandbox 프로필 — 크루원 실기기 테스트용(카카오 앱 키 확보 전). 스텁 카카오 로그인 ON + DevCourseSeeder ON.

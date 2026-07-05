@@ -13,6 +13,7 @@ import '../features/race/result_screen.dart';
 import '../features/race/session_create_screen.dart';
 import '../features/race/session_detail_screen.dart';
 import '../features/race/session_list_screen.dart';
+import '../features/replay/replay_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/splash/splash_screen.dart';
 import '../features/update/force_update_screen.dart';
@@ -67,12 +68,20 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/crews/:crewId',
         builder: (c, s) => CrewDetailScreen(crewId: _crewId(s.pathParameters)),
       ),
-      // 결과 화면을 상세보다 먼저 선언(정적 세그먼트 'result' 우선 매칭).
+      // 결과·리플레이 화면을 상세보다 먼저 선언(정적 세그먼트 우선 매칭).
       GoRoute(
         path: '/sessions/:sessionId/result',
         builder: (c, s) {
           final id = int.tryParse(s.pathParameters['sessionId'] ?? '') ?? -1;
           return SessionResultScreen(sessionId: id);
+        },
+      ),
+      // 딥링크 runningcrew://replay/{sessionId} → 여기(conventions §10).
+      GoRoute(
+        path: '/sessions/:sessionId/replay',
+        builder: (c, s) {
+          final id = int.tryParse(s.pathParameters['sessionId'] ?? '') ?? -1;
+          return ReplayScreen(sessionId: id);
         },
       ),
       GoRoute(
